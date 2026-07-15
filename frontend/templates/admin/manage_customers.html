@@ -1,0 +1,59 @@
+{% extends "admin/_layout.html" %}
+{% from "_macros.html" import pagination_nav %}
+{% block title %}Manage Customers{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-xl font-semibold text-[#2C2B26] mb-6">Customers</h1>
+
+<form method="GET" class="mb-4">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name or email..."
+           class="w-full max-w-sm px-4 py-2 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+           onchange="this.form.submit()">
+</form>
+
+<div class="bg-card border border-border rounded-xl2 shadow-matte overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-ink-muted border-b border-border bg-subtle/40">
+                <th class="px-5 py-3 font-medium">Customer</th>
+                <th class="px-5 py-3 font-medium">Email</th>
+                <th class="px-5 py-3 font-medium">Orders</th>
+                <th class="px-5 py-3 font-medium">Joined</th>
+                <th class="px-5 py-3 font-medium">Status</th>
+                <th class="px-5 py-3"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr class="border-b border-border/60 last:border-0 hover:bg-subtle/30">
+                <td class="px-5 py-3 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">
+                        {{ customer.initials }}
+                    </div>
+                    <span class="text-ink font-medium">{{ customer.full_name }}</span>
+                </td>
+                <td class="px-5 py-3 text-ink-muted">{{ customer.email }}</td>
+                <td class="px-5 py-3 text-ink-muted">{{ customer.order_count }}</td>
+                <td class="px-5 py-3 text-ink-muted">{{ customer.created_at.strftime("%b %Y") }}</td>
+                <td class="px-5 py-3">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium {% if customer.is_active %} bg-status-success/25 text-primary-dark {% else %} bg-status-cancelled/25 text-status-cancelled {% endif %}">
+                        {{ "Active" if customer.is_active else "Deactivated" }}
+                    </span>
+                </td>
+                <td class="px-5 py-3 text-right">
+                    <a href="{{ url_for('admin.customer_detail', customer_id=customer.id) }}" class="text-primary-dark text-xs font-medium hover:underline">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="px-5 py-8 text-center text-ink-muted">No customers found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="mt-8">
+    {{ pagination_nav(pagination, 'admin.manage_customers', {'q': query}) }}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-xl font-semibold text-[#2C2B26] mb-6">Sales Analytics</h1>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Top Products -->
+    <div class="lg:col-span-2 bg-card border border-border rounded-xl2 shadow-matte p-6">
+        <h3 class="text-sm font-semibold text-ink mb-4">Top Selling Products</h3>
+        {% if top_products %}
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-ink-muted border-b border-border">
+                    <th class="pb-2 font-medium">Product</th>
+                    <th class="pb-2 font-medium text-right">Units Sold</th>
+                    <th class="pb-2 font-medium text-right">Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for name, units, revenue in top_products %}
+                <tr class="border-b border-border/60 last:border-0">
+                    <td class="py-3 text-ink">{{ name }}</td>
+                    <td class="py-3 text-right text-ink-muted">{{ units }}</td>
+                    <td class="py-3 text-right font-medium text-ink">{{ currency }}{{ "%.2f"|format(revenue) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-sm text-ink-muted py-8 text-center">No sales data yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Orders by Status -->
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+        <h3 class="text-sm font-semibold text-ink mb-4">Orders by Status</h3>
+        <div class="space-y-3">
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-ink-muted">Pending</span>
+                <span class="font-semibold text-ink">{{ orders_by_status.get("Pending", 0) }}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-ink-muted">Shipped</span>
+                <span class="font-semibold text-peach-dark">{{ orders_by_status.get("Shipped", 0) }}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-ink-muted">Delivered</span>
+                <span class="font-semibold text-primary-dark">{{ orders_by_status.get("Delivered", 0) }}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-ink-muted">Cancelled</span>
+                <span class="font-semibold text-status-cancelled">{{ orders_by_status.get("Cancelled", 0) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

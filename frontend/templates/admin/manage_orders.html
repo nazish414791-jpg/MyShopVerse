@@ -1,0 +1,67 @@
+{% extends "admin/_layout.html" %}
+{% from "_macros.html" import pagination_nav %}
+{% block title %}Manage Orders{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-xl font-semibold text-[#2C2B26] mb-6">Orders</h1>
+
+<div class="flex gap-2 mb-4 flex-wrap">
+    <a href="{{ url_for('admin.manage_orders') }}"
+       class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if not status_filter %} bg-peach text-primary-dark {% else %} bg-card border border-border text-ink-muted hover:bg-subtle {% endif %}">
+        All
+    </a>
+    {% for status in order_statuses %}
+    <a href="{{ url_for('admin.manage_orders', status=status) }}"
+       class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if status_filter == status %} bg-peach text-primary-dark {% else %} bg-card border border-border text-ink-muted hover:bg-subtle {% endif %}">
+        {{ status }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="bg-card border border-border rounded-xl2 shadow-matte overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-ink-muted border-b border-border bg-subtle/40">
+                <th class="px-5 py-3 font-medium">Order</th>
+                <th class="px-5 py-3 font-medium">Customer</th>
+                <th class="px-5 py-3 font-medium">Date</th>
+                <th class="px-5 py-3 font-medium">Payment</th>
+                <th class="px-5 py-3 font-medium">Status</th>
+                <th class="px-5 py-3 font-medium text-right">Total</th>
+                <th class="px-5 py-3"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr class="border-b border-border/60 last:border-0 hover:bg-subtle/30">
+                <td class="px-5 py-3 font-medium text-ink">{{ order.order_number }}</td>
+                <td class="px-5 py-3 text-ink-muted">{{ order.shipping_full_name }}</td>
+                <td class="px-5 py-3 text-ink-muted">{{ order.created_at.strftime("%b %d, %Y") }}</td>
+                <td class="px-5 py-3 text-ink-muted">{{ order.payment_method }}</td>
+                <td class="px-5 py-3">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium
+                        {% if order.status == 'Delivered' %} bg-status-success/25 text-primary-dark
+                        {% elif order.status == 'Shipped' %} bg-peach/40 text-peach-dark
+                        {% elif order.status == 'Cancelled' %} bg-status-cancelled/25 text-status-cancelled
+                        {% else %} bg-status-pending/25 text-status-cancelled {% endif %}">
+                        {{ order.status }}
+                    </span>
+                </td>
+                <td class="px-5 py-3 text-right font-medium">{{ currency }}{{ "%.2f"|format(order.total) }}</td>
+                <td class="px-5 py-3 text-right">
+                    <a href="{{ url_for('admin.admin_order_detail', order_number=order.order_number) }}" class="text-primary-dark text-xs font-medium hover:underline">Manage</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="px-5 py-8 text-center text-ink-muted">No orders found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="mt-8">
+    {{ pagination_nav(pagination, 'admin.manage_orders', {'status': status_filter}) }}
+</div>
+{% endif %}
+{% endblock %}

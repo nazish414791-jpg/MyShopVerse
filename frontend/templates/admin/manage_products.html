@@ -1,0 +1,74 @@
+{% extends "admin/_layout.html" %}
+{% from "_macros.html" import pagination_nav %}
+{% block title %}Manage Products{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-semibold text-[#2C2B26]">Products</h1>
+    <a href="{{ url_for('admin.new_product') }}"
+       class="px-4 py-2 rounded-lg bg-peach hover:bg-peach-dark text-primary-dark hover:text-white text-sm font-medium transition-colors shadow-matte">
+        + New Product
+    </a>
+</div>
+
+<form method="GET" class="mb-4">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search products..."
+           class="w-full max-w-sm px-4 py-2 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+           onchange="this.form.submit()">
+</form>
+
+<div class="bg-card border border-border rounded-xl2 shadow-matte overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-ink-muted border-b border-border bg-subtle/40">
+                <th class="px-5 py-3 font-medium">Product</th>
+                <th class="px-5 py-3 font-medium">Category</th>
+                <th class="px-5 py-3 font-medium">Price</th>
+                <th class="px-5 py-3 font-medium">Stock</th>
+                <th class="px-5 py-3 font-medium">Status</th>
+                <th class="px-5 py-3 font-medium text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr class="border-b border-border/60 last:border-0">
+                <td class="px-5 py-3 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-subtle/60 overflow-hidden flex-shrink-0">
+                        {% if product.image_url %}<img src="{{ product.image_url }}" class="w-full h-full object-cover" loading="lazy" decoding="async">{% endif %}
+                    </div>
+                    <span class="text-ink font-medium">{{ product.name }}</span>
+                </td>
+                <td class="px-5 py-3 text-ink-muted">{{ product.category.name }}</td>
+                <td class="px-5 py-3 text-ink">{{ currency }}{{ "%.2f"|format(product.price) }}</td>
+                <td class="px-5 py-3 text-ink">{{ product.stock_quantity }}</td>
+                <td class="px-5 py-3">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium
+                        {% if not product.is_active %} bg-border text-ink-muted
+                        {% elif product.stock_quantity == 0 %} bg-status-cancelled/25 text-status-cancelled
+                        {% elif product.is_low_stock %} bg-status-pending/25 text-status-cancelled
+                        {% else %} bg-status-success/25 text-primary-dark {% endif %}">
+                        {% if not product.is_active %}Inactive{% else %}{{ product.stock_status_label }}{% endif %}
+                    </span>
+                </td>
+                <td class="px-5 py-3 text-right space-x-3">
+                    <a href="{{ url_for('admin.edit_product', product_id=product.id) }}" class="text-primary-dark text-xs font-medium hover:underline">Edit</a>
+                    <form method="POST" action="{{ url_for('admin.delete_product', product_id=product.id) }}" class="inline"
+                          onsubmit="return confirm('Delete this product?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="text-status-cancelled text-xs font-medium hover:underline">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="px-5 py-8 text-center text-ink-muted">No products found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="mt-8">
+    {{ pagination_nav(pagination, 'admin.manage_products', {'q': query}) }}
+</div>
+{% endif %}
+{% endblock %}

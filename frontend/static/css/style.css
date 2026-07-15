@@ -1,0 +1,28 @@
+/* ShopVerse — Tech Verse Agency
+   Small custom touches that complement Tailwind utility classes.
+   Most styling is handled via Tailwind config in base.html. */
+
+::selection {
+    background-color: #C7A059;
+    color: #55624A;
+}
+
+/* Smooth scroll for anchor links */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar — matte, minimal */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #EDE6D6;
+}
+::-webkit-scrollbar-thumb {
+    background: #C7A059;
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #B08D5B;
+}

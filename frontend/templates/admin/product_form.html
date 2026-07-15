@@ -1,0 +1,91 @@
+{% extends "admin/_layout.html" %}
+{% block title %}{{ "Edit Product" if mode == "edit" else "New Product" }}{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-xl font-semibold text-[#2C2B26] mb-6">{{ "Edit Product" if mode == "edit" else "New Product" }}</h1>
+
+<div class="bg-card border border-border rounded-xl2 shadow-matte p-6 max-w-3xl">
+    <form method="POST" enctype="multipart/form-data" novalidate class="space-y-5">
+        {{ form.hidden_tag() }}
+
+        <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">Product Name</label>
+            {{ form.name(class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+            {% for error in form.name.errors %}<p class="text-status-cancelled text-xs mt-1">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">Description</label>
+            {{ form.description(rows="4", class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">Tags</label>
+            {{ form.tags(placeholder="e.g. camera, electronics, gift", class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">Category</label>
+            {{ form.category_id(class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+            {% for error in form.category_id.errors %}<p class="text-status-cancelled text-xs mt-1">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">Subcategory</label>
+            {{ form.subcategory(placeholder="e.g. Rings, Chains, Bracelets", class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+            <p class="text-xs text-ink-muted mt-1">Groups products within a category (e.g. Jewellery → Rings, Chains, Bracelets).</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-ink mb-1.5">Price</label>
+                {{ form.price(class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+                {% for error in form.price.errors %}<p class="text-status-cancelled text-xs mt-1">{{ error }}</p>{% endfor %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-ink mb-1.5">Compare-at Price</label>
+                {{ form.compare_at_price(class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-ink mb-1.5">Stock Quantity</label>
+                {{ form.stock_quantity(class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+                {% for error in form.stock_quantity.errors %}<p class="text-status-cancelled text-xs mt-1">{{ error }}</p>{% endfor %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-ink mb-1.5">Low Stock Threshold</label>
+                {{ form.low_stock_threshold(class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-ink mb-1.5">SKU</label>
+                {{ form.sku(class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40") }}
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-ink mb-1.5">Product Image</label>
+            {% if mode == "edit" and product.image_url %}
+            <img src="{{ product.image_url }}" class="w-20 h-20 rounded-lg object-cover mb-2 border border-border" loading="lazy" decoding="async">
+            {% endif %}
+            {{ form.image(class="w-full text-sm text-ink-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/15 file:text-primary-dark file:text-sm file:font-medium hover:file:bg-primary/25") }}
+            {% for error in form.image.errors %}<p class="text-status-cancelled text-xs mt-1">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="flex gap-6">
+            <label class="flex items-center gap-2 text-sm text-ink cursor-pointer">
+                {{ form.is_active(class="rounded border-border text-primary focus:ring-primary/40") }} Active
+            </label>
+            <label class="flex items-center gap-2 text-sm text-ink cursor-pointer">
+                {{ form.is_featured(class="rounded border-border text-primary focus:ring-primary/40") }} Featured
+            </label>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+            {{ form.submit(class="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition-colors shadow-matte cursor-pointer") }}
+            <a href="{{ url_for('admin.manage_products') }}" class="px-6 py-2.5 rounded-lg border border-border text-ink text-sm font-medium hover:bg-subtle transition-colors">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

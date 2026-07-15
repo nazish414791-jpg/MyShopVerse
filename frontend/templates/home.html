@@ -1,0 +1,1379 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card %}
+{% block title %}{{ store_name }}{% endblock %}
+{% block nav_theme %}light{% endblock %}
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-cream text-ink{% endblock %}
+{# Hero is cream, so the navbar starts transparent with dark navy type,
+   then transitions to solid cream + navy type once scrolled (same colors,
+   so the transition is felt mainly through the shadow/border appearing). #}
+{% block main_class %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ==== 8px spacing rhythm expressed through the Tailwind scale (multiples of 4/8px). ==== */
+
+    /* Every homepage section is full-bleed (100vw); content is centered in a
+       ~1400px reading column. No section itself is a floating/rounded card —
+       only small internal components (product cards, images, the testimonial
+       card) use rounded corners + shadow. */
+    .section-shell { width: 100%; }
+    .section-inner { max-width: 1400px; margin-left: auto; margin-right: auto; padding-left: 1.5rem; padding-right: 1.5rem; }
+    @media (min-width: 1024px) { .section-inner { padding-left: 2.5rem; padding-right: 2.5rem; } }
+
+    /* Consistent, tighter vertical rhythm — replaces the old section-pad
+       (which made every section taller than one viewport). This keeps generous
+       whitespace without forcing excessive scrolling per section. */
+    .section-pad { padding-top: 64px; padding-bottom: 64px; }
+    @media (min-width: 768px) { .section-pad { padding-top: 88px; padding-bottom: 88px; } }
+
+    .trust-sep { width: 1px; height: 28px; background: rgba(44, 43, 38, 0.12); }
+    .parallax-el { will-change: transform; transition: transform 0.1s linear; }
+    .navy-texture {
+        background-image: repeating-linear-gradient(135deg, rgba(247,241,231,0.025) 0px, rgba(247,241,231,0.025) 1px, transparent 1px, transparent 14px);
+    }
+    .gold-rule { width: 40px; height: 1px; background: #C7A059; }
+    .luxury-particles {
+        background-image: radial-gradient(rgba(199,160,89,0.35) 1px, transparent 1px),
+                           radial-gradient(rgba(199,160,89,0.2) 1px, transparent 1px);
+        background-size: 90px 90px, 130px 130px;
+        background-position: 0 0, 45px 65px;
+    }
+    .faq-accordion-item { background: #F7F1E7; border: 1.5px solid rgba(44,43,38,0.08); border-radius: 20px; overflow: hidden; transition: border-color 300ms ease; }
+    .faq-accordion-item:hover { border-color: rgba(44,43,38,0.18); }
+    .faq-toggle {
+        width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        padding: 22px 28px; text-align: left; cursor: pointer; background: transparent; border: 0;
+        font-family: 'Playfair Display', ui-serif, Georgia, serif; font-size: 17px; color: #2C2B26; font-weight: 600;
+    }
+    .faq-chevron { color: #C7A059; transition: transform 350ms cubic-bezier(.22,.61,.36,1); }
+    .faq-toggle[aria-expanded="true"] .faq-chevron { transform: rotate(180deg); }
+    .faq-panel { max-height: 0; overflow: hidden; transition: max-height 400ms cubic-bezier(.22,.61,.36,1); }
+    .faq-panel.is-open { max-height: 240px; }
+    .faq-panel-inner { padding: 0 28px 24px; font-size: 15px; line-height: 1.7; color: #7A7264; }
+
+    .btn-lift { transition: transform 250ms cubic-bezier(.22,.61,.36,1), background-color 300ms ease, color 300ms ease, box-shadow 250ms ease; }
+    .btn-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -10px rgba(44,43,38,0.28); }
+    .wishlist-btn { transition: transform 300ms cubic-bezier(.34,1.56,.64,1), background-color 250ms ease, color 250ms ease; }
+    .wishlist-btn:hover { transform: scale(1.14); color: #B08D5B; }
+    .wishlist-btn:active { transform: scale(0.94); }
+    .wishlist-btn.is-active i { fill: currentColor; color: #B08D5B; }
+
+    .collection-row { display: flex; flex-direction: column; gap: 1.25rem; }
+    @media (min-width: 640px) { .collection-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (min-width: 1024px) {
+        .collection-row { display: flex; flex-direction: row; }
+        .collection-row > * { flex: 1 1 0; min-width: 0; }
+    }
+
+    /* ---- Why ShopVerse: asymmetric premium showcase (navy bg, cream cards) ---- */
+    .why-showcase-shell {
+        position: relative;
+        background: #55624A;
+        overflow: hidden;
+    }
+    .why-showcase-glow-a {
+        position: absolute; top: -10%; left: 8%; width: 480px; height: 480px;
+        background: radial-gradient(circle, rgba(199,160,89,0.16) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .why-showcase-glow-b {
+        position: absolute; bottom: -15%; right: 5%; width: 560px; height: 560px;
+        background: radial-gradient(circle, rgba(199,160,89,0.10) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .why-showcase-shape {
+        position: absolute; border: 1px solid rgba(199,160,89,0.18);
+        pointer-events: none;
+    }
+    .why-showcase-line {
+        position: absolute; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(199,160,89,0.4), transparent);
+        pointer-events: none;
+    }
+    .why-showcase-grid {
+        display: grid; grid-template-columns: 1fr; gap: 24px;
+    }
+    @media (min-width: 1024px) {
+        .why-showcase-grid {
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 28px;
+        }
+        .why-showcase-large { grid-column: span 2; grid-row: span 2; }
+    }
+    .why-showcase-card {
+        position: relative;
+        background: #F7F1E7;
+        border: 1.5px solid rgba(44, 43, 38, 0.10);
+        border-radius: 26px;
+        box-shadow: 0 18px 40px -14px rgba(0,0,0,0.35);
+        transition: transform 350ms ease, box-shadow 350ms ease, border-color 350ms ease, background-color 350ms ease;
+        overflow: hidden;
+    }
+    .why-showcase-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 60px -16px rgba(0,0,0,0.45), 0 0 0 1px rgba(199,160,89,0.35);
+        border-color: rgba(199, 160, 89, 0.55);
+        background: #FAF6EC;
+    }
+    .why-showcase-goldline {
+        position: absolute; top: 0; left: 0; width: 44px; height: 3px;
+        background: #C7A059;
+        transition: width 350ms ease;
+    }
+    .why-showcase-card:hover .why-showcase-goldline { width: 100%; }
+    .why-showcase-icon {
+        width: 58px; height: 58px; border-radius: 50%;
+        background: rgba(199,160,89,0.18);
+        color: #55624A;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform 350ms cubic-bezier(.34,1.56,.64,1), background-color 350ms ease;
+    }
+    .why-showcase-card:hover .why-showcase-icon { transform: scale(1.12) rotate(-4deg); background: #C7A059; }
+    .why-showcase-large .why-showcase-icon { width: 74px; height: 74px; }
+
+    /* ---- Why ShopVerse: Pure White variant of the showcase shell ---- */
+    .why-showcase-shell-light { position: relative; overflow: hidden; }
+    .why-showcase-glow-light-a {
+        position: absolute; top: -8%; right: 6%; width: 460px; height: 460px;
+        background: radial-gradient(circle, rgba(199,160,89,0.10) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .why-showcase-glow-light-b {
+        position: absolute; bottom: -12%; left: 4%; width: 420px; height: 420px;
+        background: radial-gradient(circle, rgba(44,43,38,0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .why-showcase-shape-light {
+        position: absolute; border: 1px solid rgba(44,43,38,0.08);
+        pointer-events: none;
+    }
+    .why-showcase-card-light {
+        background: #F7F1E7;
+        box-shadow: 0 18px 40px -18px rgba(44,43,38,0.16);
+    }
+    .why-showcase-card-light:hover {
+        box-shadow: 0 30px 60px -18px rgba(44,43,38,0.22), 0 0 0 1px rgba(199,160,89,0.4);
+    }
+
+    /* ---- Brand Story, true 55/45 two-column ---- */
+    .brand-story-grid { display: grid; grid-template-columns: 1fr; align-items: center; }
+    @media (min-width: 1024px) { .brand-story-grid { grid-template-columns: 55% 45%; } }
+    .brand-story-image-frame {
+        position: relative; width: 100%; height: 420px;
+        border-radius: 32px; overflow: hidden;
+        box-shadow: 0 30px 60px -20px rgba(0,0,0,0.45), 0 10px 24px -10px rgba(0,0,0,0.3);
+    }
+    @media (min-width: 768px) { .brand-story-image-frame { height: 520px; } }
+    @media (min-width: 1024px) { .brand-story-image-frame { height: 650px; } }
+
+    .brand-feature-icon {
+        width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+        background: rgba(44,43,38,0.06); color: #B08D5B;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ---- Statistics ---- */
+    .stat-underline {
+        display: inline-block; width: 40px; height: 2px; background: #C7A059;
+        margin-top: 14px; transition: width 300ms ease;
+    }
+    .stat-block:hover .stat-underline { width: 70px; }
+    .stat-block { transition: transform 300ms ease; cursor: default; }
+    .stat-block:hover .stat-number { transform: scale(1.04); }
+    .stat-number { display: inline-block; transition: transform 300ms ease; }
+
+    /* ---- Campaign banner ---- */
+    .campaign-banner { height: 520px; display: flex; align-items: center; }
+    .campaign-banner .section-inner { width: 100%; }
+    @keyframes bannerSlowZoom {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.12); }
+    }
+    .banner-zoom { animation: bannerSlowZoom 18s ease-in-out infinite alternate; }
+    @media (prefers-reduced-motion: reduce) { .banner-zoom { animation: none; } }
+
+    .newsletter-input-wrap { transition: box-shadow 300ms ease; }
+    .newsletter-input-wrap:focus-within { box-shadow: 0 0 0 4px rgba(199, 160, 89, 0.35); }
+
+    /* ---- Design Philosophy: minimal floating cards (deliberately distinct from Trust Cards) ---- */
+    .principle-card {
+        background: transparent;
+        padding: 20px 12px;
+        text-align: center;
+        transition: transform 400ms cubic-bezier(.22,.61,.36,1);
+    }
+    .principle-card:hover { transform: translateY(-6px); }
+    .principle-icon {
+        width: 44px; height: 44px; margin: 0 auto 20px;
+        display: flex; align-items: center; justify-content: center;
+        color: #C7A059; border: 1px solid rgba(199,160,89,0.35); border-radius: 50%;
+        transition: background-color 350ms ease, color 350ms ease, transform 350ms ease;
+    }
+    .principle-card:hover .principle-icon { background: #55624A; color: #F7F1E7; transform: scale(1.08) rotate(-4deg); }
+    .principle-heading { font-family: 'Inter', ui-sans-serif, system-ui; font-weight: 600; font-size: 17px; color: #2C2B26; margin-bottom: 8px; }
+    .principle-desc { font-family: 'Inter', ui-sans-serif, system-ui; font-size: 14px; color: #7A7264; line-height: 1.6; }
+
+    /* ---- Oversized decorative editorial typography (background only, never overlaps content) ---- */
+    .bg-decorative-type {
+        position: absolute; z-index: 0; top: 50%; right: -2%;
+        transform: translateY(-50%);
+        font-family: 'Playfair Display', ui-serif, Georgia, serif;
+        font-weight: 700; text-transform: uppercase;
+        font-size: clamp(120px, 18vw, 240px);
+        line-height: 1; letter-spacing: 2px;
+        color: #EDE4D2; opacity: 0.035;
+        white-space: nowrap; pointer-events: none; user-select: none;
+    }
+    @media (max-width: 767px) { .bg-decorative-type { display: none; } }
+
+    /* Light-colored variant of the above, for use on deep navy/dark sections */
+    .bg-decorative-type-light {
+        position: absolute; z-index: 0; top: 50%; left: -2%;
+        transform: translateY(-50%);
+        font-family: 'Playfair Display', ui-serif, Georgia, serif;
+        font-weight: 700; text-transform: uppercase;
+        font-size: clamp(120px, 18vw, 240px);
+        line-height: 1; letter-spacing: 2px;
+        color: #F7F1E7; opacity: 0.035;
+        white-space: nowrap; pointer-events: none; user-select: none;
+    }
+    @media (max-width: 767px) { .bg-decorative-type-light { display: none; } }
+
+    /* Thin gold corner-bracket accent, invitation-card style (Newsletter) */
+    .newsletter-corner-frame {
+        position: absolute; width: 84px; height: 84px; pointer-events: none; z-index: 0;
+        border-top: 1px solid rgba(199,160,89,0.32);
+        border-left: 1px solid rgba(199,160,89,0.32);
+    }
+
+    /* ================= Subtle premium background treatments for light sections =================
+       Each is intentionally faint (opacity kept low), absolutely positioned behind
+       .section-inner (which carries relative z-10), and pointer-events:none so it
+       never interferes with content or interaction. No two consecutive light
+       sections on the homepage share the same treatment. */
+
+    /* ---- 1. Fine grain / noise (Trust Features) ---- */
+    .bg-grain-texture {
+        position: absolute; inset: 0; pointer-events: none; z-index: 0;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ---- 2. Soft blurred circles (Featured Products) ---- */
+    .bg-blur-circle { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; }
+
+    /* ---- 4. Faint mesh gradient (Best Sellers) ---- */
+    .bg-mesh-gradient {
+        position: absolute; inset: 0; pointer-events: none; z-index: 0;
+        background-image:
+            radial-gradient(at 12% 18%, rgba(199,160,89,0.11) 0px, transparent 46%),
+            radial-gradient(at 88% 12%, rgba(44,43,38,0.05) 0px, transparent 42%),
+            radial-gradient(at 78% 88%, rgba(199,160,89,0.09) 0px, transparent 46%),
+            radial-gradient(at 15% 92%, rgba(44,43,38,0.04) 0px, transparent 42%);
+    }
+
+    /* ---- 8. Soft paper fiber texture + warm glow (Testimonials) ---- */
+    .bg-paper-fiber {
+        position: absolute; inset: 0; pointer-events: none; z-index: 0;
+        opacity: 0.09;
+        background-image:
+            radial-gradient(circle, rgba(44,43,38,0.7) 0.6px, transparent 1.1px),
+            radial-gradient(circle, rgba(44,43,38,0.7) 0.6px, transparent 1.1px),
+            radial-gradient(circle, rgba(44,43,38,0.7) 0.6px, transparent 1.1px);
+        background-size: 84px 84px, 116px 116px, 68px 68px;
+        background-position: 0 0, 40px 60px, 70px 10px;
+    }
+    .bg-soft-glow-warm {
+        position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+        background: radial-gradient(circle, rgba(199,160,89,0.12) 0%, transparent 70%);
+    }
+
+    /* ---- 9. Minimal blueprint-style line art (FAQ) ---- */
+    .bg-blueprint { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.9; }
+
+    /* ---- 10. Elegant wave pattern (Design Philosophy) ---- */
+    .bg-wave-pattern { position: absolute; left: 0; right: 0; pointer-events: none; z-index: 0; opacity: 0.9; }
+
+    /* ---- Luxury grid pattern (fine hairline grid, extremely faint) ---- */
+    .bg-luxury-grid {
+        position: absolute; inset: 0; pointer-events: none; z-index: 0;
+        opacity: 0.05;
+        background-image:
+            linear-gradient(#55624A 1px, transparent 1px),
+            linear-gradient(90deg, #55624A 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 90%);
+        -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 90%);
+    }
+
+    /* ---- Abstract organic shape (soft blurred blob, irregular border-radius) ---- */
+    .bg-organic-blob {
+        position: absolute; pointer-events: none; z-index: 0;
+        filter: blur(2px);
+    }
+
+    .trust-card {
+        position: relative;
+        background: #F7F1E7;
+        border: 1.5px solid rgba(44, 43, 38, 0.12);
+        border-radius: 26px;
+        padding: 48px 40px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(44, 43, 38, 0.06);
+        cursor: pointer;
+        transition: transform 350ms ease-in-out, box-shadow 350ms ease-in-out, border-color 350ms ease-in-out;
+    }
+    .trust-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 24px 55px rgba(44, 43, 38, 0.14);
+        border-color: rgba(44, 43, 38, 0.28);
+    }
+    .trust-gold-line {
+        position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+        width: 70px; height: 2px; background: #C7A059;
+        transition: width 350ms ease-in-out;
+    }
+    .trust-card:hover .trust-gold-line { width: 100%; }
+    .trust-icon-circle {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: #55624A; color: #F7F1E7;
+        display: flex; align-items: center; justify-content: center;
+        margin: 8px auto 28px;
+        box-shadow: 0 10px 24px -8px rgba(44, 43, 38, 0.35);
+        transition: transform 350ms ease-in-out, box-shadow 350ms ease-in-out;
+    }
+    .trust-card:hover .trust-icon-circle {
+        transform: scale(1.08) rotate(5deg);
+        box-shadow: 0 14px 30px -6px rgba(199, 160, 89, 0.45);
+    }
+    .trust-card-heading {
+        font-family: 'Inter', ui-sans-serif, system-ui;
+        font-weight: 600; font-size: 23px; color: #2C2B26;
+        margin-bottom: 12px;
+    }
+    .trust-card-desc {
+        font-family: 'Inter', ui-sans-serif, system-ui;
+        font-weight: 400; font-size: 15px; color: #7A7264;
+        line-height: 1.6;
+    }
+    .luxury-card {
+        box-shadow: 0 1px 3px rgba(44, 43, 38, 0.06), 0 1px 2px rgba(44, 43, 38, 0.04);
+        transition: transform 0.45s cubic-bezier(.22,.61,.36,1), box-shadow 0.45s cubic-bezier(.22,.61,.36,1);
+    }
+    .luxury-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 60px -20px rgba(44, 43, 38, 0.28), 0 10px 24px -10px rgba(44, 43, 38, 0.14);
+    }
+    .img-zoom-slow { transition: transform 1.4s cubic-bezier(.22,.61,.36,1); }
+    .group:hover .img-zoom-slow { transform: scale(1.08); }
+    .wishlist-btn { transition: opacity 300ms ease, transform 300ms cubic-bezier(.34,1.56,.64,1), background-color 250ms ease, color 250ms ease; }
+    .wishlist-btn:hover { transform: scale(1.14); color: #B08D5B; }
+    .wishlist-btn:active { transform: scale(0.94); }
+    .wishlist-btn.is-active i { fill: currentColor; color: #B08D5B; }
+
+    /* ---- Trust strip ---- */
+    .trust-item { transition: transform 0.3s ease; }
+    .trust-item:hover .trust-icon { transform: scale(1.08); }
+    .trust-item:hover .trust-heading { color: #B08D5B; }
+    .trust-icon { transition: transform 0.3s cubic-bezier(.22,.61,.36,1); }
+    .trust-heading { transition: color 0.25s ease; }
+
+    /* ---- Collection cards (Shop by Collection) ---- */
+    .collection-card .collection-title,
+    .collection-card .collection-arrow { transition: transform 0.4s cubic-bezier(.22,.61,.36,1), opacity 0.4s ease; }
+    .collection-card:hover .collection-title { transform: translateY(-8px); }
+    .collection-card .collection-arrow { opacity: 0; transform: translateY(4px); }
+    .collection-card:hover .collection-arrow { opacity: 1; transform: translateY(0); }
+    .collection-card:hover { transform: translateY(-6px); }
+    .collection-card { transition: transform 0.4s cubic-bezier(.22,.61,.36,1); }
+
+    /* ---- Testimonials, split layout: image+badge left, slider right ---- */
+    .testi-grid { display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center; }
+    @media (min-width: 1024px) { .testi-grid { grid-template-columns: 40% 60%; gap: 4rem; } }
+    .testi-image-frame {
+        position: relative; width: 100%; height: 320px;
+        border-radius: 28px; overflow: hidden;
+        box-shadow: 0 24px 50px -18px rgba(44,43,38,0.28), 0 8px 20px -10px rgba(44,43,38,0.16);
+    }
+    @media (min-width: 768px) { .testi-image-frame { height: 380px; } }
+    @media (min-width: 1024px) { .testi-image-frame { height: 420px; } }
+    .testi-years-badge {
+        position: absolute; bottom: -20px; right: -12px;
+        background: #F7F1E7; border: 1px solid rgba(44,43,38,0.08);
+        border-radius: 20px; padding: 16px 20px;
+        box-shadow: 0 18px 40px -14px rgba(44,43,38,0.32);
+        text-align: center;
+    }
+
+    .testi-viewport { overflow: hidden; }
+    .testi-track { display: flex; transition: transform 600ms cubic-bezier(.22,.61,.36,1); }
+    .testi-slide { flex: 0 0 100%; min-width: 0; opacity: 0.3; transition: opacity 600ms ease; }
+    .testi-slide.is-active { opacity: 1; }
+    .testi-card { transition: transform 350ms cubic-bezier(.22,.61,.36,1), box-shadow 350ms cubic-bezier(.22,.61,.36,1); }
+    .testi-card:hover { transform: translateY(-4px); box-shadow: 0 26px 55px -22px rgba(44,43,38,0.22); }
+    .testi-arrow {
+        width: 46px; height: 46px; border-radius: 999px;
+        border: 1.5px solid transparent;
+        display: flex; align-items: center; justify-content: center;
+        color: #55624A; background: rgba(44, 43, 38, 0.06);
+        transition: background-color 250ms ease, border-color 250ms ease, transform 250ms ease, color 250ms ease;
+    }
+    .testi-arrow:hover { background-color: rgba(199, 160, 89, 0.14); border-color: #C7A059; color: #B08D5B; transform: scale(1.08); }
+    .testi-arrow:active { transform: scale(0.94); }
+    .testi-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(44,43,38,0.18); transition: all 300ms cubic-bezier(.22,.61,.36,1); }
+    .testi-dot.is-active { width: 22px; background: #C7A059; }
+
+    .stat-divider { width: 1px; }
+
+    /* ================= HERO v2 — editorial portfolio-inspired, cream ================= */
+    .hero-grid { display: grid; grid-template-columns: 1fr; }
+    @media (min-width: 1024px) { .hero-grid { grid-template-columns: 48% 52%; align-items: center; } }
+    .hero-script { font-family: 'Petit Formal Script', cursive; font-weight: 400; }
+    .hero-arch-frame {
+        position: relative; width: 100%; height: 380px;
+        border-radius: 260px 260px 24px 24px;
+        overflow: hidden;
+        box-shadow: 0 30px 60px -20px rgba(44,43,38,0.28), 0 10px 24px -10px rgba(44,43,38,0.16);
+    }
+    @media (min-width: 640px)  { .hero-arch-frame { height: 460px; border-radius: 320px 320px 28px 28px; } }
+    @media (min-width: 1024px) { .hero-arch-frame { height: 560px; border-radius: 380px 380px 32px 32px; } }
+    .hero-orbit-badge {
+        position: absolute; width: 108px; height: 108px; border-radius: 50%;
+        background: #F7F1E7; border: 1px solid rgba(44,43,38,0.1);
+        display: flex; align-items: center; justify-content: center; text-align: center;
+        box-shadow: 0 14px 30px -10px rgba(44,43,38,0.22);
+        animation: hero-badge-float 5s ease-in-out infinite;
+    }
+    @keyframes hero-badge-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @media (prefers-reduced-motion: reduce) { .hero-orbit-badge { animation: none; } }
+
+    /* Soft dashed ring sitting behind the arch photo, adds a boutique/editorial frame */
+    .hero-ring-accent {
+        border: 1.5px dashed rgba(199,160,89,0.35);
+        border-radius: 320px 320px 24px 24px;
+        transform: scale(1.055) translate(10px, -10px);
+        animation: hero-ring-spin 40s linear infinite;
+    }
+    @keyframes hero-ring-spin { from { transform: scale(1.055) translate(10px, -10px) rotate(0deg); } to { transform: scale(1.055) translate(10px, -10px) rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .hero-ring-accent { animation: none; } }
+
+    /* Wave cap fusing the hero into the dark stat strip below it */
+    .hero-strip-cap { position: absolute; top: -1px; left: 0; width: 100%; height: 34px; display: block; }
+
+    /* Compact trust/stat strip — sits directly under the hero, single slim row */
+    .hero-stat-strip { background: #3F4A38; }
+    .hero-stat-item { border-right: 1px solid rgba(247,241,231,0.16); }
+    .hero-stat-item:last-child { border-right: none; }
+
+    /* ================= Reusable "editorial split" pattern =================
+       LEFT: small eyebrow + large serif heading + short paragraph + link.
+       RIGHT: the actual product/category cards, deliberately smaller than
+       a full-width grid would allow. Each section that uses this varies its
+       right-side grid shape so no two feel identical. */
+    .split-grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
+    @media (min-width: 1024px) { .split-grid { grid-template-columns: 0.62fr 1.38fr; gap: 56px; align-items: start; } }
+    .split-label-line { width: 32px; height: 2px; background: #C7A059; }
+
+    /* Shop by Collection: right side = small 2-col grid of category cards */
+    .mini-collection-card {
+        position: relative; border-radius: 20px; overflow: hidden;
+        aspect-ratio: 4 / 5; box-shadow: 0 14px 30px -14px rgba(44,43,38,0.28);
+        transition: transform 400ms cubic-bezier(.22,.61,.36,1);
+    }
+    .mini-collection-card:hover { transform: translateY(-6px); }
+
+    /* Latest Arrivals: smaller minimal card — rounded photo box, clean caption below, nothing else */
+    .arrival-mini-card { transition: transform 400ms cubic-bezier(.22,.61,.36,1); }
+    .arrival-mini-card:hover { transform: translateY(-6px); }
+    .arrival-mini-photo {
+        position: relative; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden;
+        box-shadow: 0 14px 30px -16px rgba(44,43,38,0.25);
+        background: #EDE4D2;
+    }
+
+    /* Shop by Collection: simplified single row, minimal size, all collections fit on desktop */
+    .collection-row-minimal { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+    @media (min-width: 640px) { .collection-row-minimal { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (min-width: 1024px) { .collection-row-minimal { display: flex; flex-direction: row; } }
+    .collection-row-minimal > .mini-collection-card { aspect-ratio: 3 / 4; }
+    @media (min-width: 1024px) { .collection-row-minimal > .mini-collection-card { flex: 1 1 0; min-width: 0; } }
+
+    /* Best Sellers: circular-photo cards, 4 across on desktop */
+    .circle-card {
+        background: #FFFFFF; border: 1px solid rgba(44,43,38,0.07);
+        border-radius: 24px; padding: 28px 20px; text-align: center;
+        transition: transform 380ms cubic-bezier(.22,.61,.36,1), box-shadow 380ms ease, border-color 380ms ease;
+    }
+    .circle-card:hover { transform: translateY(-8px); box-shadow: 0 24px 48px -18px rgba(44,43,38,0.2); border-color: rgba(199,160,89,0.4); }
+    .circle-card-photo {
+        width: 104px; height: 104px; border-radius: 50%; overflow: hidden;
+        margin: 0 auto 18px; border: 3px solid #F7F1E7;
+        box-shadow: 0 10px 24px -10px rgba(44,43,38,0.3);
+    }
+    .circle-card-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 500ms ease; }
+    .circle-card:hover .circle-card-photo img { transform: scale(1.08); }
+
+    /* New Arrivals: asymmetric — 1 tall feature + a small stack, distinct from the other two grids */
+    .arrivals-feature { border-radius: 24px; overflow: hidden; position: relative; box-shadow: 0 20px 44px -18px rgba(44,43,38,0.28); }
+    .arrivals-mini { border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 12px 26px -14px rgba(44,43,38,0.22); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ===================== HERO — full-bleed Warm Cream, editorial portfolio-inspired ===================== -->
+<section id="hero" data-theme="light" class="section-shell reveal bg-cream relative overflow-hidden">
+    <div class="absolute -top-16 -left-10 w-[360px] h-[360px] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(199,160,89,0.12) 0%, transparent 70%);"></div>
+    <div class="bg-blur-circle" style="width: 320px; height: 320px; bottom: -12%; right: -6%; background: radial-gradient(circle, rgba(85,98,74,0.10) 0%, transparent 72%);" aria-hidden="true"></div>
+    <svg class="bg-wave-pattern" style="top: 46%; opacity: 0.55;" viewBox="0 0 1400 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,50 C 233,15 466,85 700,50 C 933,15 1166,85 1400,50" fill="none" stroke="#C7A059" stroke-opacity="0.14" stroke-width="1.5"></path>
+    </svg>
+    <div class="section-inner hero-grid gap-14 lg:gap-16 pt-16 pb-14 md:pt-20 md:pb-16 relative">
+
+        <!-- LEFT — 48% -->
+        <div class="flex flex-col justify-center">
+            <p class="hero-script text-peach-dark text-[28px] leading-none mb-3 reveal-left" style="transition-delay: 0ms;">
+                <svg class="inline-block w-4 h-4 -mt-1 mr-1.5 text-peach-dark/70" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 6.6L20 10l-6.1 1.4L12 18l-1.9-6.6L4 10l6.1-1.4L12 2z"/></svg>
+                Hello, welcome to
+            </p>
+            <h1 class="font-serif text-[44px] sm:text-6xl lg:text-[72px] font-bold text-[#2C2B26] leading-[1.02] mb-5 tracking-tight">
+                <span class="hero-3d-word">{% for ch in "SHOP" %}<span class="hero-3d-letter" style="animation-delay: {{ loop.index0 * 55 }}ms;">{{ ch }}</span>{% endfor %}</span><span class="hero-3d-word text-peach-dark">{% for ch in "VERSE" %}<span class="hero-3d-letter" style="animation-delay: {{ (loop.index0 + 4) * 55 }}ms;">{{ ch }}</span>{% endfor %}</span>
+            </h1>
+            <p class="text-[13px] font-semibold tracking-[4px] uppercase text-ink-muted mb-6 reveal-left" style="transition-delay: 120ms;">Considered Fashion &amp; Objects</p>
+            <p class="text-[#7A7264] text-base md:text-lg mb-9 max-w-md leading-relaxed reveal-left" style="transition-delay: 220ms;">
+                Leather, gold, and fine cloth — chosen for craftsmanship, made to be kept, not replaced.
+            </p>
+            <div class="flex flex-wrap items-center gap-5 mb-11 reveal-left" style="transition-delay: 320ms;">
+                <a href="{{ url_for('products.listing') }}"
+                   class="btn-lift inline-flex items-center gap-2 bg-[#2C2B26] hover:bg-[#231F19] text-cream font-medium text-sm tracking-wide uppercase px-8 py-4 rounded-full shadow-matte">
+                    Shop the Collection
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+                <span class="flex items-center gap-2 text-xs text-ink-muted tracking-wide">
+                    <span class="w-1.5 h-1.5 rounded-full bg-peach-dark"></span> Free Worldwide Shipping
+                </span>
+            </div>
+        </div>
+
+        <!-- RIGHT — 52%: arched editorial fashion image with orbit badge -->
+        <div class="relative px-6 sm:px-10 lg:px-4 reveal-scale" style="transition-delay: 150ms;">
+            <div class="absolute inset-0 -z-10 hero-ring-accent" aria-hidden="true"></div>
+            <div class="hero-arch-frame tilt-3d relative shadow-elevated">
+                <img src="https://images.unsplash.com/photo-1538329972958-465d6d2144ed?w=1200&q=80&auto=format&fit=crop"
+                     alt="Luxury editorial fashion campaign, neutral studio tones"
+                     class="banner-zoom w-full h-full object-cover" loading="eager" decoding="async" fetchpriority="high">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#2C2B26]/25 via-transparent to-transparent"></div>
+                <div class="tilt-shine"></div>
+            </div>
+            <div class="hero-orbit-badge -right-2 -bottom-4 sm:right-2 sm:-bottom-6">
+                <p class="text-[10px] font-semibold tracking-[0.15em] uppercase text-[#2C2B26] leading-tight px-3">Crafted To Be Kept</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compact stat strip — single slim row, replaces the old oversized Trust/Statistics sections -->
+    <div class="hero-stat-strip relative mt-2">
+        <svg class="hero-strip-cap" viewBox="0 0 1400 34" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0,34 C 233,4 466,30 700,10 C 933,-6 1166,30 1400,4 L1400,34 Z" fill="#3F4A38"></path>
+        </svg>
+        <div class="section-inner">
+            <div class="grid grid-cols-2 md:grid-cols-4 py-6 md:py-7">
+                <div class="hero-stat-item flex items-center justify-center gap-2.5 px-3 py-2">
+                    <i data-lucide="star" class="w-4 h-4 text-peach fill-current flex-shrink-0"></i>
+                    <span class="text-cream text-[13px] md:text-sm"><strong class="font-serif font-semibold">4.9</strong> Rating</span>
+                </div>
+                <div class="hero-stat-item flex items-center justify-center gap-2.5 px-3 py-2">
+                    <i data-lucide="users" class="w-4 h-4 text-peach flex-shrink-0"></i>
+                    <span class="text-cream text-[13px] md:text-sm"><strong class="font-serif font-semibold">15K+</strong> Customers</span>
+                </div>
+                <div class="hero-stat-item flex items-center justify-center gap-2.5 px-3 py-2">
+                    <i data-lucide="globe" class="w-4 h-4 text-peach flex-shrink-0"></i>
+                    <span class="text-cream text-[13px] md:text-sm"><strong class="font-serif font-semibold">40+</strong> Countries</span>
+                </div>
+                <div class="hero-stat-item flex items-center justify-center gap-2.5 px-3 py-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-peach flex-shrink-0"></i>
+                    <span class="text-cream text-[13px] md:text-sm">Secure Checkout</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== SHOP BY COLLECTION — full-bleed Warm Ivory, centered minimal row ===================== -->
+<section class="section-shell reveal bg-cream relative overflow-hidden" id="categories">
+    <svg class="bg-wave-pattern" style="top: -20px;" viewBox="0 0 1400 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,50 C 175,15 350,85 525,50 C 700,15 875,85 1050,50 C 1225,15 1400,85 1400,50" fill="none" stroke="#C7A059" stroke-opacity="0.12" stroke-width="1.5"></path>
+    </svg>
+    <div class="bg-blur-circle" style="width: 380px; height: 380px; top: -10%; right: -8%; background: radial-gradient(circle, rgba(44,43,38,0.05) 0%, transparent 72%);" aria-hidden="true"></div>
+    <div class="section-inner relative z-10 py-16 md:py-20">
+        <div class="text-center max-w-xl mx-auto mb-10">
+            <div class="split-label-line mb-5 mx-auto"></div>
+            <p class="text-peach-dark text-[13px] font-semibold tracking-[4px] uppercase mb-4">Shop The Edit</p>
+            <h2 class="font-serif text-3xl md:text-[40px] font-semibold text-[#2C2B26] leading-[1.1]">Curated Collections</h2>
+        </div>
+
+        <div class="collection-row-minimal gap-4 md:gap-5">
+            {% for cat in categories %}
+            <a href="{{ url_for('products.listing', category=cat.slug) }}"
+               class="mini-collection-card group reveal-scale" style="transition-delay: {{ loop.index0 * 80 }}ms;">
+                {% if cat.image_url %}
+                <img src="{{ cat.image_url }}" alt="{{ cat.name }}" class="img-zoom w-full h-full object-cover" loading="lazy" decoding="async">
+                {% else %}
+                <div class="w-full h-full bg-primary-light/30"></div>
+                {% endif %}
+                <div class="absolute inset-0 bg-gradient-to-t from-[#2C2B26]/90 via-[#2C2B26]/10 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-3">
+                    <p class="font-serif text-cream text-[13px] font-semibold leading-tight">{{ cat.name }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ===================== BEST SELLERS / MOST LOVED — full-bleed Soft Beige, circular cards ===================== -->
+<section class="section-shell reveal bg-[#F2EBDA] relative overflow-hidden">
+    <div class="bg-mesh-gradient" aria-hidden="true"></div>
+    <div class="section-inner relative z-10 section-pad">
+        <div class="split-grid">
+            <!-- LEFT — aesthetic title + short paragraph -->
+            <div class="reveal" style="transition-delay: 0ms;">
+                <div class="split-label-line mb-5"></div>
+                <p class="text-peach-dark text-[13px] font-semibold tracking-[4px] uppercase mb-4">Fan Favorites</p>
+                <h2 class="font-serif text-3xl md:text-[40px] font-semibold text-[#2C2B26] leading-[1.1] mb-5">Most Loved</h2>
+                <p class="text-[#7A7264] text-[15px] leading-relaxed mb-8 max-w-xs">
+                    The pieces our customers return to again and again, for their elegance and everyday wear.
+                </p>
+                <a href="{{ url_for('products.listing', sort='popular') }}"
+                   class="btn-lift inline-flex items-center gap-2 text-[#2C2B26] font-medium text-sm tracking-wide uppercase border-b-2 border-peach-dark pb-1">
+                    View All Best Sellers <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+
+            <!-- RIGHT — circular-photo cards, 4 across -->
+            {% if most_loved %}
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+                {% for product in most_loved[:4] %}
+                <a href="{{ url_for('products.detail', slug=product.slug) }}" class="circle-card reveal-scale block" style="transition-delay: {{ loop.index0 * 90 }}ms;">
+                    <div class="circle-card-photo">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
+                        {% endif %}
+                    </div>
+                    <p class="font-serif text-[15px] font-semibold text-ink mb-1 line-clamp-1">{{ product.name }}</p>
+                    <p class="text-[11px] text-ink-muted uppercase tracking-wide mb-2.5">{{ product.category.name }}</p>
+                    <div class="flex items-center justify-center gap-0.5 text-peach-dark">
+                        {% for i in range(5) %}
+                        <i data-lucide="star" class="w-3 h-3 {% if i < 4 + (product.id % 2) %}fill-current{% else %}text-border{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-cream border border-border rounded-xl2 p-12 text-center">
+                <p class="text-ink-muted">No products yet — check back soon.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- ===================== BRAND STORY — full-bleed Warm Beige, editorial storytelling ===================== -->
+<section id="about" class="section-shell reveal scroll-mt-24 bg-[#EFE7D4] relative overflow-hidden">
+    <p class="bg-decorative-type" style="left: auto; right: -2%;" aria-hidden="true">HERITAGE</p>
+    <div class="absolute -bottom-24 -left-16 w-[440px] h-[440px] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(199,160,89,0.16) 0%, transparent 70%);" aria-hidden="true"></div>
+    <div class="absolute top-[8%] right-[4%] w-[220px] h-[220px] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(44,43,38,0.05) 0%, transparent 72%);" aria-hidden="true"></div>
+    <div class="section-inner brand-story-grid gap-14 lg:gap-16 section-pad relative z-10">
+
+        <!-- LEFT — 55%: large luxury editorial image -->
+        <div class="relative order-1">
+            <div class="brand-story-image-frame parallax-el">
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=80&auto=format&fit=crop"
+                     alt="Editorial fashion campaign, neutral studio tones" class="w-full h-full object-cover" loading="lazy" decoding="async">
+            </div>
+            <div class="absolute bottom-8 right-3 lg:right-6 bg-card border border-primary/10 rounded-xl2 px-6 py-5 shadow-elevated">
+                <p class="font-serif text-2xl text-peach-dark font-semibold leading-none mb-1">25 Years</p>
+                <p class="text-[11px] text-ink-muted tracking-widest uppercase">Of Heritage</p>
+            </div>
+        </div>
+
+        <!-- RIGHT — 45%: editorial copy -->
+        <div class="flex flex-col justify-center order-2">
+            <p class="text-peach-dark text-xs font-medium tracking-[4px] uppercase mb-6 reveal" style="transition-delay: 0ms;">Our Story</p>
+            <h2 class="font-serif text-3xl md:text-[44px] font-semibold text-[#2C2B26] mb-6 leading-[1.15] reveal" style="transition-delay: 100ms;">
+                Crafted For Modern <span class="text-peach-dark">Elegance.</span>
+            </h2>
+
+            <div class="space-y-5 mb-10 reveal" style="transition-delay: 200ms;">
+                <p class="text-[18px] text-[#5C5647] leading-relaxed">
+                    ShopVerse was founded on a simple belief: that clothing and objects made with intention
+                    outlast every trend. Each piece we offer is chosen for the quality of its materials, the
+                    integrity of its construction, and its ability to feel as considered a decade from now as
+                    it does today — a promise we hold ourselves to with every collection we release.
+                </p>
+                <p class="text-[18px] text-[#5C5647] leading-relaxed">
+                    We work with artisans and mills who share that philosophy — people who measure success in
+                    craftsmanship, not shortcuts. From the first sketch to the final stitch, every decision is
+                    weighed against one question: will this still feel right in ten years? The result is a
+                    collection built to be worn, kept, and eventually passed on to someone else who will love
+                    it just as much.
+                </p>
+            </div>
+
+            <div class="space-y-5 mb-11">
+                <div class="flex items-center gap-4 reveal" style="transition-delay: 300ms;">
+                    <div class="brand-feature-icon"><i data-lucide="gem" class="w-4 h-4"></i></div>
+                    <p class="text-[#2C2B26] text-sm font-medium tracking-wide">Premium Materials</p>
+                </div>
+                <div class="flex items-center gap-4 reveal" style="transition-delay: 420ms;">
+                    <div class="brand-feature-icon"><i data-lucide="sparkles" class="w-4 h-4"></i></div>
+                    <p class="text-[#2C2B26] text-sm font-medium tracking-wide">Timeless Design</p>
+                </div>
+                <div class="flex items-center gap-4 reveal" style="transition-delay: 540ms;">
+                    <div class="brand-feature-icon"><i data-lucide="leaf" class="w-4 h-4"></i></div>
+                    <p class="text-[#2C2B26] text-sm font-medium tracking-wide">Ethical Craftsmanship</p>
+                </div>
+            </div>
+
+            <a href="#about" class="btn-lift inline-flex items-center gap-2 self-start bg-primary hover:bg-peach text-cream hover:text-primary-dark font-medium text-sm tracking-wide uppercase px-8 py-4 rounded-full shadow-elevated reveal" style="transition-delay: 620ms;">
+                Discover Our Story <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== NEW ARRIVALS / LATEST ARRIVALS — full-bleed Off-White, simple grid ===================== -->
+<section class="section-shell reveal scroll-mt-24 bg-[#FBF7EE] relative overflow-hidden" id="new-arrivals">
+    <div class="why-showcase-line" style="width: 260px; top: 14%; left: -50px; background: linear-gradient(90deg, transparent, rgba(199,160,89,0.5), transparent);" aria-hidden="true"></div>
+    <div class="why-showcase-line" style="width: 200px; bottom: 18%; right: -40px; background: linear-gradient(90deg, transparent, rgba(199,160,89,0.4), transparent);" aria-hidden="true"></div>
+    <div class="section-inner relative z-10 section-pad">
+
+        {% set arrivals_grid = new_arrivals[:6] %}
+        <div class="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-16 items-stretch">
+
+            <!-- LEFT — compact 3x2 grid, both rows visible together -->
+            {% if arrivals_grid %}
+            <div class="grid grid-cols-3 gap-3 md:gap-4 content-start">
+                {% for product in arrivals_grid %}
+                <a href="{{ url_for('products.detail', slug=product.slug) }}"
+                   class="arrival-mini-card block" style="transition-delay: {{ (loop.index0 % 3) * 100 }}ms;">
+                    <div class="arrival-mini-photo">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-zoom w-full h-full object-cover" loading="lazy">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-ink-muted text-xs">No Image</div>
+                        {% endif %}
+                    </div>
+                    <div class="pt-2.5">
+                        <p class="text-[9px] text-peach-dark tracking-[1.5px] uppercase mb-0.5">{{ product.category.name }}</p>
+                        <p class="font-serif text-[12.5px] text-[#2C2B26] font-medium leading-snug mb-0.5 line-clamp-1">{{ product.name }}</p>
+                        <p class="text-[11.5px] text-ink-muted">{{ currency }}{{ "%.2f"|format(product.price) }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- RIGHT — aesthetic title, paragraph, filled to match grid height -->
+            <div class="flex flex-col justify-center reveal" style="transition-delay: 150ms;">
+                <div class="split-label-line mb-5"></div>
+                <p class="text-peach-dark text-[13px] font-semibold tracking-[4px] uppercase mb-4">Just Landed</p>
+                <h2 class="font-serif text-3xl md:text-[42px] font-semibold text-[#2C2B26] leading-[1.12] mb-6">
+                    The Newest Additions to the Collection
+                </h2>
+                <p class="text-[#7A7264] text-[15px] leading-relaxed mb-5">
+                    Every piece you see here just arrived — chosen with the same care as everything else
+                    we carry, and photographed the day it landed in the studio. Nothing sits in this row
+                    for long.
+                </p>
+                <p class="text-[#7A7264] text-[15px] leading-relaxed mb-9">
+                    From fresh leather silhouettes to the season's first gold, this is where our newest
+                    craftsmanship debuts before it moves into the full collection.
+                </p>
+                <div class="grid grid-cols-3 gap-6 mb-10 pb-9 border-b border-primary/10">
+                    <div>
+                        <p class="font-serif text-2xl text-[#2C2B26] font-semibold">6</p>
+                        <p class="text-[10px] text-ink-muted tracking-widest uppercase mt-1">New This Week</p>
+                    </div>
+                    <div>
+                        <p class="font-serif text-2xl text-[#2C2B26] font-semibold">5</p>
+                        <p class="text-[10px] text-ink-muted tracking-widest uppercase mt-1">Collections</p>
+                    </div>
+                    <div>
+                        <p class="font-serif text-2xl text-[#2C2B26] font-semibold">24h</p>
+                        <p class="text-[10px] text-ink-muted tracking-widest uppercase mt-1">Studio To Site</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('products.listing', sort='newest') }}"
+                   class="btn-lift inline-flex items-center gap-2 self-start bg-primary hover:bg-peach text-white hover:text-primary-dark font-medium text-sm tracking-wide uppercase px-9 py-4 rounded-full">
+                    View All New Arrivals <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== WHY SHOPVERSE — full-bleed Pure White, asymmetric showcase ===================== -->
+<section class="section-shell reveal bg-card why-showcase-shell-light">
+    <svg class="bg-wave-pattern" style="top: -15px;" viewBox="0 0 1400 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,50 C 350,85 1050,15 1400,50" fill="none" stroke="#55624A" stroke-opacity="0.035" stroke-width="1.5"></path>
+    </svg>
+    <p class="bg-decorative-type" aria-hidden="true">TRUST</p>
+    <div class="why-showcase-glow-light-a"></div>
+    <div class="why-showcase-glow-light-b"></div>
+    <div class="why-showcase-shape-light" style="width: 220px; height: 220px; top: 12%; right: 10%; border-radius: 28px; transform: rotate(18deg);"></div>
+    <div class="why-showcase-shape-light" style="width: 140px; height: 140px; bottom: 14%; left: 6%; border-radius: 50%;"></div>
+    <div class="why-showcase-line" style="width: 220px; top: 22%; left: -40px; background: linear-gradient(90deg, transparent, rgba(199,160,89,0.55), transparent);"></div>
+    <div class="why-showcase-line" style="width: 260px; bottom: 18%; right: -60px; background: linear-gradient(90deg, transparent, rgba(199,160,89,0.55), transparent);"></div>
+
+    <div class="section-inner relative section-pad">
+        <div class="text-center max-w-xl mx-auto mb-10">
+            <p class="text-peach-dark text-[14px] font-semibold tracking-[4px] uppercase mb-3">The ShopVerse Difference</p>
+            <h2 class="font-serif text-3xl md:text-[42px] font-semibold text-[#2C2B26] leading-tight mb-4">
+                Why Choose ShopVerse
+            </h2>
+            <p class="text-[#7A7264] text-[16px] leading-relaxed max-w-[560px] mx-auto">
+                Every detail is thoughtfully designed to deliver a seamless shopping experience built on quality, trust, and timeless style.
+            </p>
+        </div>
+
+        <div class="why-showcase-grid">
+            <!-- Large featured card -->
+            <div class="why-showcase-card why-showcase-card-light why-showcase-large reveal-scale p-10 md:p-12 flex flex-col justify-center" style="transition-delay: 0ms;">
+                <span class="why-showcase-goldline"></span>
+                <div class="why-showcase-icon reveal-scale mb-7" style="transition-delay: 140ms;">
+                    <i data-lucide="gem" class="w-8 h-8"></i>
+                </div>
+                <p class="font-serif text-[30px] md:text-[34px] font-semibold text-ink mb-3 leading-tight">Premium Quality</p>
+                <p class="font-sans text-[16px] text-ink-muted leading-relaxed max-w-sm">
+                    Every piece is vetted by hand — from full-grain leather to solid gold —
+                    chosen for material honesty and built to be kept, not replaced.
+                </p>
+            </div>
+
+            <!-- Four smaller cards -->
+            <div class="why-showcase-card why-showcase-card-light reveal-scale p-8 flex flex-col" style="transition-delay: 100ms;">
+                <span class="why-showcase-goldline"></span>
+                <div class="why-showcase-icon reveal-scale mb-5" style="transition-delay: 240ms;">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <p class="font-sans text-[19px] font-semibold text-ink mb-1.5">Luxury Experience</p>
+                <p class="font-sans text-[14px] text-ink-muted leading-relaxed">White-glove service, from first click to unboxing.</p>
+            </div>
+
+            <div class="why-showcase-card why-showcase-card-light reveal-scale p-8 flex flex-col" style="transition-delay: 180ms;">
+                <span class="why-showcase-goldline"></span>
+                <div class="why-showcase-icon reveal-scale mb-5" style="transition-delay: 320ms;">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <p class="font-sans text-[19px] font-semibold text-ink mb-1.5">Secure Payments</p>
+                <p class="font-sans text-[14px] text-ink-muted leading-relaxed">Encrypted checkout, protected on every order.</p>
+            </div>
+
+            <div class="why-showcase-card why-showcase-card-light reveal-scale p-8 flex flex-col" style="transition-delay: 260ms;">
+                <span class="why-showcase-goldline"></span>
+                <div class="why-showcase-icon reveal-scale mb-5" style="transition-delay: 400ms;">
+                    <i data-lucide="globe" class="w-6 h-6"></i>
+                </div>
+                <p class="font-sans text-[19px] font-semibold text-ink mb-1.5">Worldwide Delivery</p>
+                <p class="font-sans text-[14px] text-ink-muted leading-relaxed">Complimentary shipping to your doorstep, anywhere.</p>
+            </div>
+
+            <div class="why-showcase-card why-showcase-card-light reveal-scale p-8 flex flex-col" style="transition-delay: 340ms;">
+                <span class="why-showcase-goldline"></span>
+                <div class="why-showcase-icon reveal-scale mb-5" style="transition-delay: 480ms;">
+                    <i data-lucide="infinity" class="w-6 h-6"></i>
+                </div>
+                <p class="font-sans text-[19px] font-semibold text-ink mb-1.5">Timeless Design</p>
+                <p class="font-sans text-[14px] text-ink-muted leading-relaxed">Considered pieces that outlast trends, season after season.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== TESTIMONIALS — full-bleed Warm Cream ===================== -->
+<section class="section-shell reveal bg-cream relative overflow-hidden">
+    <p class="bg-decorative-type" aria-hidden="true">VOICES</p>
+    <svg class="bg-wave-pattern" style="bottom: -20px;" viewBox="0 0 1400 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,50 C 300,15 500,85 800,50 C 1050,20 1250,80 1400,50" fill="none" stroke="#C7A059" stroke-opacity="0.12" stroke-width="1.5"></path>
+    </svg>
+    <div class="bg-paper-fiber" aria-hidden="true"></div>
+    <div class="bg-soft-glow-warm" style="width: 520px; height: 520px; top: -18%; right: -10%;" aria-hidden="true"></div>
+    <div class="bg-soft-glow-warm" style="width: 420px; height: 420px; bottom: -16%; left: -8%;" aria-hidden="true"></div>
+    <div class="why-showcase-shape-light" style="width: 150px; height: 150px; top: 14%; right: 7%; border-radius: 50%;" aria-hidden="true"></div>
+    <div class="why-showcase-shape-light" style="width: 120px; height: 120px; bottom: 16%; left: 6%; border-radius: 24px; transform: rotate(14deg);" aria-hidden="true"></div>
+    <div class="section-inner relative z-10 section-pad">
+        <div class="testi-grid">
+
+            <!-- LEFT — aesthetic image, "12+ Years" badge, heading & copy -->
+            <div class="reveal" style="transition-delay: 0ms;">
+                <div class="testi-image-frame">
+                    <img src="https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=900&q=80&auto=format&fit=crop" alt="Handcrafted leather goods, premium quality" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                    <div class="testi-years-badge">
+                        <p class="font-serif text-2xl text-peach-dark font-semibold leading-none mb-1">12+ Years</p>
+                        <p class="text-[10px] text-ink-muted tracking-widest uppercase">Of Trust</p>
+                    </div>
+                </div>
+
+                <div class="mt-10">
+                    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Loved By Customers</p>
+                    <h2 class="font-serif text-3xl md:text-[40px] font-semibold text-primary leading-[1.15] mb-5">What People Are Saying</h2>
+                    <p class="text-ink-muted text-[15px] leading-relaxed mb-7 max-w-md">
+                        More than a decade of considered craftsmanship and honest service — every review reflects
+                        the same promise we make with each order: quality that's felt, not just seen.
+                    </p>
+
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center -space-x-3">
+                            <img src="https://images.unsplash.com/photo-1569925444984-9e2e5fc3d1fb?w=80&q=80&auto=format&fit=crop&crop=faces" alt="" class="w-9 h-9 rounded-full object-cover ring-2 ring-cream shadow-matte" loading="lazy" decoding="async">
+                            <img src="https://images.unsplash.com/photo-1552334949-51934e5f2d38?w=80&q=80&auto=format&fit=crop&crop=faces" alt="" class="w-9 h-9 rounded-full object-cover ring-2 ring-cream shadow-matte" loading="lazy" decoding="async">
+                            <img src="https://images.unsplash.com/photo-1542803293-cde7da05c348?w=80&q=80&auto=format&fit=crop&crop=faces" alt="" class="w-9 h-9 rounded-full object-cover ring-2 ring-cream shadow-matte" loading="lazy" decoding="async">
+                            <span class="w-9 h-9 rounded-full bg-primary text-cream text-[10px] font-semibold flex items-center justify-center ring-2 ring-cream">+15K</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-0.5 text-peach">
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                            </div>
+                            <p class="text-ink-muted text-xs mt-0.5">4.9 average · 15,000+ reviews</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT — testimonial slider, compact cards -->
+            <div class="reveal-scale" style="transition-delay: 150ms;">
+                <div id="testi-wrapper" class="w-full">
+                    <div class="testi-viewport">
+                        <div id="testi-track" class="testi-track">
+
+                            <div class="testi-slide">
+                                <div class="testi-card bg-[#F2EBDA] rounded-[24px] shadow-elevated px-6 py-8 md:px-10 md:py-10 text-center relative">
+                                    <img src="https://images.unsplash.com/photo-1569925444984-9e2e5fc3d1fb?w=140&q=80&auto=format&fit=crop&crop=faces" alt="Alina R." class="w-14 h-14 rounded-full object-cover mx-auto mb-3 ring-4 ring-peach/30 shadow-elevated" loading="lazy" decoding="async">
+                                    <p class="text-sm font-semibold text-ink mb-0.5">Alina R.</p>
+                                    <p class="text-[11px] text-ink-muted mb-2">New York, USA</p>
+                                    <span class="inline-flex items-center gap-1.5 text-[10px] font-medium tracking-wide uppercase text-peach-dark bg-peach/12 border border-peach/30 rounded-full px-2.5 py-1 mb-3">
+                                        <i data-lucide="badge-check" class="w-3 h-3"></i> Verified Customer
+                                    </span>
+                                    <div class="flex gap-1 text-peach justify-center mb-3">
+                                        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                                    </div>
+                                    <p class="font-serif text-peach-dark/25 text-6xl leading-none -mb-4">&ldquo;</p>
+                                    <p class="font-serif text-sm md:text-base text-ink leading-[1.65] max-w-sm mx-auto">
+                                        The briefcase arrived exactly as described — the leather is even richer in person.
+                                        Checkout was seamless and shipping was faster than expected.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="testi-slide">
+                                <div class="testi-card bg-[#F2EBDA] rounded-[24px] shadow-elevated px-6 py-8 md:px-10 md:py-10 text-center relative">
+                                    <img src="https://images.unsplash.com/photo-1552334949-51934e5f2d38?w=140&q=80&auto=format&fit=crop&crop=faces" alt="Maya K." class="w-14 h-14 rounded-full object-cover mx-auto mb-3 ring-4 ring-peach/30 shadow-elevated" loading="lazy" decoding="async">
+                                    <p class="text-sm font-semibold text-ink mb-0.5">Maya K.</p>
+                                    <p class="text-[11px] text-ink-muted mb-2">London, UK</p>
+                                    <span class="inline-flex items-center gap-1.5 text-[10px] font-medium tracking-wide uppercase text-peach-dark bg-peach/12 border border-peach/30 rounded-full px-2.5 py-1 mb-3">
+                                        <i data-lucide="badge-check" class="w-3 h-3"></i> Verified Customer
+                                    </span>
+                                    <div class="flex gap-1 text-peach justify-center mb-3">
+                                        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                                    </div>
+                                    <p class="font-serif text-peach-dark/25 text-6xl leading-none -mb-4">&ldquo;</p>
+                                    <p class="font-serif text-sm md:text-base text-ink leading-[1.65] max-w-sm mx-auto">
+                                        Bought the gold hoops as a gift and they were beautifully packaged. You can tell
+                                        every detail on this site was considered — a genuinely premium experience.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="testi-slide">
+                                <div class="testi-card bg-[#F2EBDA] rounded-[24px] shadow-elevated px-6 py-8 md:px-10 md:py-10 text-center relative">
+                                    <img src="https://images.unsplash.com/photo-1542803293-cde7da05c348?w=140&q=80&auto=format&fit=crop&crop=faces" alt="David H." class="w-14 h-14 rounded-full object-cover mx-auto mb-3 ring-4 ring-peach/30 shadow-elevated" loading="lazy" decoding="async">
+                                    <p class="text-sm font-semibold text-ink mb-0.5">David H.</p>
+                                    <p class="text-[11px] text-ink-muted mb-2">Toronto, Canada</p>
+                                    <span class="inline-flex items-center gap-1.5 text-[10px] font-medium tracking-wide uppercase text-peach-dark bg-peach/12 border border-peach/30 rounded-full px-2.5 py-1 mb-3">
+                                        <i data-lucide="badge-check" class="w-3 h-3"></i> Verified Customer
+                                    </span>
+                                    <div class="flex gap-1 text-peach justify-center mb-3">
+                                        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                                    </div>
+                                    <p class="font-serif text-peach-dark/25 text-6xl leading-none -mb-4">&ldquo;</p>
+                                    <p class="font-serif text-sm md:text-base text-ink leading-[1.65] max-w-sm mx-auto">
+                                        Tracking my order and managing returns was effortless. This is the kind of store
+                                        I trust with a gift purchase — no surprises, just quality.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-5 mt-7">
+                        <button id="testi-prev" type="button" aria-label="Previous testimonial" class="testi-arrow">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <div id="testi-dots" class="flex items-center gap-2">
+                            <button class="testi-dot is-active" data-index="0" aria-label="Testimonial 1"></button>
+                            <button class="testi-dot" data-index="1" aria-label="Testimonial 2"></button>
+                            <button class="testi-dot" data-index="2" aria-label="Testimonial 3"></button>
+                        </div>
+                        <button id="testi-next" type="button" aria-label="Next testimonial" class="testi-arrow">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ===================== CAMPAIGN BANNER — full-bleed editorial image ===================== -->
+<section class="section-shell reveal relative overflow-hidden campaign-banner">
+    <div class="absolute inset-0 overflow-hidden parallax-el">
+        <img src="https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=1920&q=80&auto=format&fit=crop"
+             alt="Autumn campaign, editorial fashion tones" class="banner-zoom w-full h-full object-cover" loading="lazy" decoding="async">
+    </div>
+    <div class="absolute inset-0 bg-primary" style="opacity: 0.45;"></div>
+    <div class="section-inner relative flex items-center justify-center h-full">
+        <div class="max-w-[900px] mx-auto text-center py-8">
+            <p class="text-peach text-xs font-medium tracking-[4px] uppercase mb-5 reveal" style="transition-delay: 0ms;">Autumn Collection</p>
+            <h2 class="font-serif text-3xl md:text-[46px] font-semibold text-cream mb-5 leading-[1.15] reveal" style="transition-delay: 120ms;">
+                Experience Timeless <span class="text-peach">Luxury.</span>
+            </h2>
+            <p class="text-cream/80 text-base md:text-lg mb-10 max-w-lg mx-auto reveal" style="transition-delay: 240ms;">
+                A capsule of considered pieces, cut from the finest cloth and made to last well beyond the season.
+            </p>
+            <a href="{{ url_for('products.listing') }}"
+               class="btn-lift inline-flex items-center gap-2 bg-cream hover:bg-peach text-primary-dark font-medium text-sm tracking-wide uppercase px-9 py-4 rounded-full reveal" style="transition-delay: 360ms;">
+                Explore Collection <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== FAQ — full-bleed White ===================== -->
+<section class="section-shell reveal bg-card relative overflow-hidden">
+    <svg class="bg-wave-pattern" style="top: -18px;" viewBox="0 0 1400 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,50 C 233,85 466,15 700,50 C 933,85 1166,15 1400,50" fill="none" stroke="#C7A059" stroke-opacity="0.1" stroke-width="1.5"></path>
+    </svg>
+    <svg class="bg-wave-pattern" style="top: 38%;" viewBox="0 0 1400 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,50 C 350,10 1050,90 1400,50" fill="none" stroke="#55624A" stroke-opacity="0.03" stroke-width="1.5"></path>
+    </svg>
+    <svg class="bg-wave-pattern" style="bottom: -18px;" viewBox="0 0 1400 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,50 C 233,15 466,85 700,50 C 933,15 1166,85 1400,50" fill="none" stroke="#C7A059" stroke-opacity="0.12" stroke-width="1.5"></path>
+    </svg>
+    <svg class="bg-blueprint" viewBox="0 0 1400 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect x="980" y="60" width="340" height="220" fill="none" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></rect>
+        <line x1="980" y1="60" x2="980" y2="30" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <line x1="1320" y1="60" x2="1320" y2="30" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <line x1="980" y1="30" x2="1320" y2="30" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <circle cx="1150" cy="170" r="46" fill="none" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></circle>
+        <line x1="1150" y1="140" x2="1150" y2="200" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <line x1="1120" y1="170" x2="1180" y2="170" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <line x1="60" y1="560" x2="60" y2="640" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <line x1="60" y1="640" x2="220" y2="640" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <line x1="40" y1="600" x2="80" y2="600" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+        <line x1="60" y1="580" x2="60" y2="620" stroke="#55624A" stroke-opacity="0.05" stroke-width="1"></line>
+    </svg>
+    <div class="section-inner relative z-10 section-pad">
+        <div class="text-center max-w-xl mx-auto mb-10">
+            <p class="text-peach-dark text-[14px] font-semibold tracking-[4px] uppercase mb-3">Support</p>
+            <h2 class="font-serif text-3xl md:text-[42px] font-semibold text-[#2C2B26] leading-tight mb-4">Frequently Asked Questions</h2>
+            <p class="text-[#7A7264] text-[16px] leading-relaxed max-w-[560px] mx-auto">Find answers to the most common questions about shipping, returns, payments and our products.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-16">
+            <!-- LEFT — intro + support CTA -->
+            <div class="reveal" style="transition-delay: 0ms;">
+                <p class="font-serif text-2xl text-ink font-semibold mb-4">Still have questions?</p>
+                <p class="text-ink-muted text-base leading-relaxed mb-8">
+                    Our team is here to help with anything from sizing and shipping to order changes.
+                    We usually reply within a few hours.
+                </p>
+                <a href="mailto:support@{{ store_name|lower|replace(' ', '') }}.com"
+                   class="btn-lift inline-flex items-center gap-2 bg-primary hover:bg-peach text-white hover:text-primary-dark font-medium text-sm tracking-wide uppercase px-8 py-4 rounded-full mb-10">
+                    Contact Support <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+
+                <div class="relative rounded-xl2 overflow-hidden shadow-elevated aspect-[4/5] max-w-sm">
+                    <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=900&q=80&auto=format&fit=crop"
+                         alt="Our studio team, ready to help" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/5 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <p class="text-peach text-[11px] font-medium tracking-[3px] uppercase mb-1.5">Real People</p>
+                        <p class="font-serif text-cream text-lg font-semibold leading-snug">A Team That Actually Answers</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT — accordion -->
+            <div class="space-y-4">
+                <div class="faq-accordion-item reveal" style="transition-delay: 0ms;">
+                    <button type="button" class="faq-toggle" aria-expanded="true">
+                        <span>How long does shipping take?</span>
+                        <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-panel is-open">
+                        <div class="faq-panel-inner">
+                            Every order ships free worldwide. Domestic delivery typically takes 3–5 business days;
+                            international orders arrive within 7–12 business days, tracked from checkout to your door.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-accordion-item reveal" style="transition-delay: 80ms;">
+                    <button type="button" class="faq-toggle" aria-expanded="false">
+                        <span>Can I return an item?</span>
+                        <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-panel">
+                        <div class="faq-panel-inner">
+                            Yes — we offer a 30-day return window on all unworn, unused pieces in their original
+                            packaging. Refunds are issued to your original payment method once the item is received.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-accordion-item reveal" style="transition-delay: 160ms;">
+                    <button type="button" class="faq-toggle" aria-expanded="false">
+                        <span>Do you ship internationally?</span>
+                        <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-panel">
+                        <div class="faq-panel-inner">
+                            Yes — we ship to over 50 countries worldwide, with duties and taxes calculated
+                            transparently at checkout so there are no surprises on delivery.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-accordion-item reveal" style="transition-delay: 240ms;">
+                    <button type="button" class="faq-toggle" aria-expanded="false">
+                        <span>Which payment methods do you accept?</span>
+                        <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-panel">
+                        <div class="faq-panel-inner">
+                            We accept all major credit and debit cards, along with popular digital wallets.
+                            Every payment is processed through an encrypted, PCI-compliant checkout.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-accordion-item reveal" style="transition-delay: 320ms;">
+                    <button type="button" class="faq-toggle" aria-expanded="false">
+                        <span>How can I track my order?</span>
+                        <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-panel">
+                        <div class="faq-panel-inner">
+                            Once your order ships, you'll receive a tracking link by email — you can also view
+                            live status any time from My Orders in your account.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-accordion-item reveal" style="transition-delay: 400ms;">
+                    <button type="button" class="faq-toggle" aria-expanded="false">
+                        <span>How do I contact support?</span>
+                        <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-panel">
+                        <div class="faq-panel-inner">
+                            Reach our team any time via the Contact Support button on this page, or email us
+                            directly — we typically respond within a few hours.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== NEWSLETTER — full-bleed Deep Navy ===================== -->
+<!-- ===================== OUR PROCESS — full-bleed warm cream, numbered craftsmanship journey ===================== -->
+<section class="section-shell reveal relative overflow-hidden bg-[#EFE7D4]">
+    <div class="absolute -top-20 -right-16 w-[420px] h-[420px] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(199,160,89,0.12) 0%, transparent 70%);" aria-hidden="true"></div>
+    <div class="absolute -bottom-24 -left-10 w-[320px] h-[320px] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(44,43,38,0.05) 0%, transparent 72%);" aria-hidden="true"></div>
+    <svg class="bg-wave-pattern" style="top: -14px;" viewBox="0 0 1400 90" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,45 C 233,10 466,80 700,45 C 933,10 1166,80 1400,45" fill="none" stroke="#C7A059" stroke-opacity="0.16" stroke-width="1.5"></path>
+    </svg>
+
+    <div class="section-inner relative z-10 section-pad">
+        <div class="text-center max-w-xl mx-auto mb-16">
+            <div class="split-label-line mb-5 mx-auto"></div>
+            <p class="text-peach-dark text-[13px] font-semibold tracking-[4px] uppercase mb-4">Our Process</p>
+            <h2 class="font-serif text-3xl md:text-[42px] font-semibold text-[#2C2B26] leading-[1.15] mb-5">From Raw Material to Your Door</h2>
+            <p class="text-[#7A7264] text-[15px] leading-relaxed">
+                Every piece follows the same considered path — nothing rushed, nothing shortcut.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_0.9fr] gap-6 lg:gap-5 items-stretch">
+            <div class="reveal" style="transition-delay: 0ms;">
+                <p class="font-serif text-4xl text-peach-dark/70 font-semibold mb-4">01</p>
+                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+                    <i data-lucide="leaf" class="w-5 h-5"></i>
+                </div>
+                <p class="text-[#2C2B26] font-semibold text-[15px] mb-2">Source</p>
+                <p class="text-ink-muted text-sm leading-relaxed">
+                    We select materials directly from small tanneries, mills and goldsmiths who share our standards.
+                </p>
+            </div>
+            <div class="reveal" style="transition-delay: 100ms;">
+                <p class="font-serif text-4xl text-peach-dark/70 font-semibold mb-4">02</p>
+                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+                    <i data-lucide="hammer" class="w-5 h-5"></i>
+                </div>
+                <p class="text-[#2C2B26] font-semibold text-[15px] mb-2">Craft</p>
+                <p class="text-ink-muted text-sm leading-relaxed">
+                    Every piece is hand-finished by makers who spend years perfecting a single technique.
+                </p>
+            </div>
+            <div class="reveal" style="transition-delay: 200ms;">
+                <p class="font-serif text-4xl text-peach-dark/70 font-semibold mb-4">03</p>
+                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+                    <i data-lucide="badge-check" class="w-5 h-5"></i>
+                </div>
+                <p class="text-[#2C2B26] font-semibold text-[15px] mb-2">Curate</p>
+                <p class="text-ink-muted text-sm leading-relaxed">
+                    Our buyers review every sample by hand before it earns a place in the collection.
+                </p>
+            </div>
+            <div class="reveal" style="transition-delay: 300ms;">
+                <p class="font-serif text-4xl text-peach-dark/70 font-semibold mb-4">04</p>
+                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+                    <i data-lucide="package-check" class="w-5 h-5"></i>
+                </div>
+                <p class="text-[#2C2B26] font-semibold text-[15px] mb-2">Deliver</p>
+                <p class="text-ink-muted text-sm leading-relaxed">
+                    Carefully packaged and shipped free worldwide, tracked from our studio to your door.
+                </p>
+            </div>
+
+            <!-- Accent statement card -->
+            <div class="rounded-xl2 bg-primary p-7 flex flex-col justify-center reveal" style="transition-delay: 400ms;">
+                <i data-lucide="quote" class="w-6 h-6 text-peach mb-4"></i>
+                <p class="font-serif text-cream text-base leading-relaxed">
+                    Every piece is a quiet promise of quality, from the first sketch to your doorstep.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    (function () {
+        const track = document.getElementById('testi-track');
+        const wrapper = document.getElementById('testi-wrapper');
+        const dots = document.querySelectorAll('.testi-dot');
+        const prevBtn = document.getElementById('testi-prev');
+        const nextBtn = document.getElementById('testi-next');
+        if (!track || !wrapper) return;
+
+        const slideCount = track.children.length;
+        const slideEls = Array.from(track.children);
+        let current = 0;
+        let timer = null;
+
+        const render = () => {
+            track.style.transform = `translateX(-${current * 100}%)`;
+            dots.forEach((d, i) => d.classList.toggle('is-active', i === current));
+            slideEls.forEach((s, i) => s.classList.toggle('is-active', i === current));
+        };
+        const goTo = (index) => { current = (index + slideCount) % slideCount; render(); };
+        const next = () => goTo(current + 1);
+        const prev = () => goTo(current - 1);
+
+        const startAutoplay = () => { stopAutoplay(); timer = setInterval(next, 6000); };
+        const stopAutoplay = () => { if (timer) clearInterval(timer); };
+
+        nextBtn && nextBtn.addEventListener('click', () => { next(); startAutoplay(); });
+        prevBtn && prevBtn.addEventListener('click', () => { prev(); startAutoplay(); });
+        dots.forEach((dot) => dot.addEventListener('click', () => { goTo(parseInt(dot.dataset.index, 10)); startAutoplay(); }));
+
+        wrapper.addEventListener('mouseenter', stopAutoplay);
+        wrapper.addEventListener('mouseleave', startAutoplay);
+
+        render();
+        startAutoplay();
+    })();
+
+    (function () {
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.wishlist-btn');
+            if (!btn) return;
+            e.preventDefault();
+            btn.classList.toggle('is-active');
+        });
+    })();
+
+    (function () {
+        const els = document.querySelectorAll('.parallax-el');
+        if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const onScroll = () => {
+            els.forEach((el) => {
+                const rect = el.closest('section').getBoundingClientRect();
+                const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+                const offset = Math.max(-1, Math.min(1, progress - 0.5)) * 24;
+                el.style.transform = `translateY(${offset}px) scale(1.1)`;
+            });
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    })();
+
+    (function () {
+        const nums = document.querySelectorAll('.stat-number');
+        if (!nums.length) return;
+        const animate = (el) => {
+            const target = parseInt(el.dataset.count, 10);
+            const suffix = el.dataset.suffix || '';
+            const duration = 1200;
+            const start = performance.now();
+            const tick = (now) => {
+                const t = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - t, 3);
+                el.textContent = Math.round(eased * target) + suffix;
+                if (t < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        };
+        if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) { animate(entry.target); io.unobserve(entry.target); }
+                });
+            }, { threshold: 0.5 });
+            nums.forEach((el) => io.observe(el));
+        } else {
+            nums.forEach((el) => { el.textContent = el.dataset.count + (el.dataset.suffix || ''); });
+        }
+    })();
+
+    (function () {
+        const items = document.querySelectorAll('.faq-accordion-item');
+        if (!items.length) return;
+        items.forEach((item) => {
+            const btn = item.querySelector('.faq-toggle');
+            const panel = item.querySelector('.faq-panel');
+            btn.addEventListener('click', () => {
+                const isOpen = panel.classList.contains('is-open');
+                items.forEach((other) => {
+                    other.querySelector('.faq-toggle').setAttribute('aria-expanded', 'false');
+                    other.querySelector('.faq-panel').classList.remove('is-open');
+                });
+                if (!isOpen) {
+                    btn.setAttribute('aria-expanded', 'true');
+                    panel.classList.add('is-open');
+                }
+            });
+        });
+    })();
+</script>
+{% endblock %}

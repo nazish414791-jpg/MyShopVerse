@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed{% endblock %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}max-w-2xl mx-auto px-6 pt-[130px] pb-16{% endblock %}
+
+{% block content %}
+<!-- ===================== STEP INDICATOR ===================== -->
+<div class="flex items-center gap-3 sm:gap-6 mb-8 text-xs sm:text-sm font-medium tracking-wide justify-center">
+    <span class="flex items-center gap-2 text-status-success">
+        <span class="w-6 h-6 rounded-full bg-status-success/20 text-status-success flex items-center justify-center text-[11px]">
+            <i data-lucide="check" class="w-3 h-3"></i>
+        </span>
+        Shopping Cart
+    </span>
+    <span class="flex-1 h-px bg-status-success/40 max-w-[50px]"></span>
+    <span class="flex items-center gap-2 text-status-success">
+        <span class="w-6 h-6 rounded-full bg-status-success/20 text-status-success flex items-center justify-center text-[11px]">
+            <i data-lucide="check" class="w-3 h-3"></i>
+        </span>
+        Shipping &amp; Payment
+    </span>
+    <span class="flex-1 h-px bg-status-success/40 max-w-[50px]"></span>
+    <span class="flex items-center gap-2 text-primary-dark">
+        <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[11px] font-semibold">
+            <i data-lucide="check" class="w-3 h-3"></i>
+        </span>
+        Confirmation
+    </span>
+</div>
+
+<div class="bg-card border border-border rounded-xl2 shadow-elevated p-10 text-center reveal-scale relative overflow-hidden">
+    <div class="ambient-blob ambient-blob-sage" style="width: 220px; height: 220px; top: -80px; left: -60px;" aria-hidden="true"></div>
+    <div class="ambient-blob ambient-blob-gold" style="width: 200px; height: 200px; bottom: -80px; right: -60px;" aria-hidden="true"></div>
+    <div class="relative w-16 h-16 mx-auto mb-5">
+        <span class="success-ring absolute inset-0 rounded-full bg-status-success/40"></span>
+        <div class="success-check-circle relative w-16 h-16 rounded-full bg-status-success/25 text-primary-dark flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path class="success-check-path" stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+            </svg>
+        </div>
+    </div>
+
+    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-2">Thank You</p>
+    <h1 class="font-serif text-2xl md:text-3xl font-semibold text-ink mb-2">Order Placed Successfully!</h1>
+    <p class="text-ink-muted mb-6">Thank you for shopping with {{ store_name }}. We'll notify you as your order progresses.</p>
+
+        <div class="bg-subtle/50 border border-border rounded-xl p-6 text-left mb-6">
+            <div class="flex justify-between text-sm mb-2">
+                <span class="text-ink-muted">Order Number</span>
+                <span class="font-semibold text-ink">{{ order.order_number }}</span>
+            </div>
+            <div class="flex justify-between text-sm mb-2">
+                <span class="text-ink-muted">Payment Method</span>
+                <span class="text-ink">{{ order.payment_method }}</span>
+            </div>
+            {% if order.payment_method == "Card Payment (Stripe)" %}
+            <div class="flex justify-between text-sm mb-2">
+                <span class="text-ink-muted">Payment Status</span>
+                {% if order.is_paid %}
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/25 text-status-success">Paid</span>
+                {% else %}
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-cancelled/20 text-status-cancelled">Payment Pending</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="flex justify-between text-sm mb-2">
+                <span class="text-ink-muted">Status</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-pending/25 text-status-cancelled">{{ order.status }}</span>
+            </div>
+            <div class="flex justify-between text-sm font-semibold pt-2 border-t border-border mt-2">
+                <span>Total</span>
+                <span>{{ currency }}{{ "%.2f"|format(order.total) }}</span>
+            </div>
+        </div>
+
+        {% if order.payment_method == "Card Payment (Stripe)" and not order.is_paid %}
+        <div class="mb-4">
+            <a href="{{ url_for('cart.stripe_checkout', order_number=order.order_number) }}"
+               class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#2C2B26] hover:bg-[#231F19] text-cream text-sm font-medium transition-colors shadow-matte">
+                <i data-lucide="credit-card" class="w-4 h-4"></i>
+                Complete Payment
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="flex gap-3 justify-center">
+            <a href="{{ url_for('products.listing') }}"
+               class="px-6 py-2.5 rounded-lg border border-border text-ink text-sm font-medium hover:bg-subtle transition-colors">
+                Continue Shopping
+            </a>
+            <a href="{{ url_for('orders.order_history') }}"
+               class="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition-colors shadow-matte">
+                View My Orders
+            </a>
+        </div>
+    </div>
+{% endblock %}

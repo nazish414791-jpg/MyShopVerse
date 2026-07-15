@@ -1,0 +1,36 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Manage Categories{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-semibold text-[#2C2B26]">Categories</h1>
+    <a href="{{ url_for('admin.new_category') }}"
+       class="px-4 py-2 rounded-lg bg-peach hover:bg-peach-dark text-primary-dark hover:text-white text-sm font-medium transition-colors shadow-matte">
+        + New Category
+    </a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for cat in categories %}
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-5">
+        <div class="flex items-start justify-between mb-2">
+            <h3 class="text-sm font-semibold text-ink">{{ cat.name }}</h3>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium {% if cat.is_active %} bg-status-success/25 text-primary-dark {% else %} bg-border text-ink-muted {% endif %}">
+                {{ "Active" if cat.is_active else "Inactive" }}
+            </span>
+        </div>
+        <p class="text-xs text-ink-muted mb-3">{{ cat.description or "No description" }}</p>
+        <p class="text-xs text-ink-muted mb-4">{{ cat.products.count() }} product(s)</p>
+        <div class="flex gap-3">
+            <a href="{{ url_for('admin.edit_category', category_id=cat.id) }}" class="text-primary-dark text-xs font-medium hover:underline">Edit</a>
+            <form method="POST" action="{{ url_for('admin.delete_category', category_id=cat.id) }}" onsubmit="return confirm('Delete this category?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="text-status-cancelled text-xs font-medium hover:underline">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-ink-muted text-sm col-span-full text-center py-8">No categories yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

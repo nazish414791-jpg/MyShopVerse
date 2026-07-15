@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}w-full p-0{% endblock %}
+{% block show_footer %}{% endblock %}
+
+{% block content %}
+<div class="w-full min-h-[calc(100vh-88px)] grid grid-cols-1 lg:grid-cols-2">
+
+    <!-- ===================== LEFT: LUXURY PHOTO ===================== -->
+    <div class="hidden lg:block relative overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?w=1400&q=80&auto=format&fit=crop"
+             alt="{{ store_name }} — tailored fashion" class="absolute inset-0 w-full h-full object-cover" loading="eager" decoding="async" fetchpriority="high">
+        <div class="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/25 to-primary/10"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-transparent"></div>
+
+        <div class="relative z-10 h-full flex flex-col justify-between p-12 xl:p-16">
+            <a href="{{ url_for('index') }}" class="font-serif text-2xl font-semibold text-cream tracking-tight">
+                {{ store_name }}
+            </a>
+            <div class="max-w-md">
+                <p class="text-peach text-xs font-medium tracking-[0.3em] uppercase mb-4">Join The Collection</p>
+                <h2 class="font-serif text-4xl xl:text-[42px] text-cream font-semibold leading-[1.15] mb-5">
+                    Become Part of<br>Something Considered
+                </h2>
+                <p class="text-cream/75 text-[15px] leading-relaxed">
+                    Create an account to unlock faster checkout, order tracking, a saved wishlist,
+                    and first access to new arrivals before anyone else.
+                </p>
+                <ul class="space-y-3 mt-8 pt-8 border-t border-cream/20">
+                    <li class="flex items-center gap-3 text-cream/85 text-sm">
+                        <i data-lucide="check" class="w-4 h-4 text-peach flex-shrink-0"></i> Free worldwide delivery on every order
+                    </li>
+                    <li class="flex items-center gap-3 text-cream/85 text-sm">
+                        <i data-lucide="check" class="w-4 h-4 text-peach flex-shrink-0"></i> Easy 30-day returns, no questions asked
+                    </li>
+                    <li class="flex items-center gap-3 text-cream/85 text-sm">
+                        <i data-lucide="check" class="w-4 h-4 text-peach flex-shrink-0"></i> Early access to limited pieces
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== RIGHT: REGISTER FORM ===================== -->
+    <div class="flex items-center justify-center px-6 py-16 sm:py-20 relative">
+        <div class="bg-blur-circle" style="width: 260px; height: 260px; top: 8%; right: -10%; background: radial-gradient(circle, rgba(199,160,89,0.16) 0%, transparent 72%);" aria-hidden="true"></div>
+        <div class="w-full max-w-md relative z-10 reveal">
+
+            <a href="{{ url_for('index') }}" class="lg:hidden font-serif text-2xl font-semibold text-[#2C2B26] block text-center mb-10">
+                {{ store_name }}
+            </a>
+
+            <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Get Started</p>
+            <h1 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-3 leading-tight">Create Your Account</h1>
+            <p class="text-ink-muted text-sm mb-9">Join {{ store_name }} and start building a collection built to last.</p>
+
+            <form method="POST" novalidate class="space-y-5">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    <label for="full_name" class="block text-sm font-medium text-ink mb-1.5">Full Name</label>
+                    {{ form.full_name(class="w-full px-4 py-3 rounded-xl2 border border-border bg-card
+                        focus:outline-none focus:ring-2 focus:ring-peach/40 focus:border-peach transition-all text-sm shadow-matte",
+                        placeholder="e.g. Alina R.") }}
+                    {% for error in form.full_name.errors %}
+                    <p class="text-status-cancelled text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-ink mb-1.5">Email Address</label>
+                    {{ form.email(class="w-full px-4 py-3 rounded-xl2 border border-border bg-card
+                        focus:outline-none focus:ring-2 focus:ring-peach/40 focus:border-peach transition-all text-sm shadow-matte",
+                        placeholder="you@example.com") }}
+                    {% for error in form.email.errors %}
+                    <p class="text-status-cancelled text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-ink mb-1.5">Password</label>
+                    {{ form.password(class="w-full px-4 py-3 rounded-xl2 border border-border bg-card
+                        focus:outline-none focus:ring-2 focus:ring-peach/40 focus:border-peach transition-all text-sm shadow-matte",
+                        placeholder="At least 8 characters") }}
+                    {% for error in form.password.errors %}
+                    <p class="text-status-cancelled text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-ink mb-1.5">Confirm Password</label>
+                    {{ form.confirm_password(class="w-full px-4 py-3 rounded-xl2 border border-border bg-card
+                        focus:outline-none focus:ring-2 focus:ring-peach/40 focus:border-peach transition-all text-sm shadow-matte",
+                        placeholder="Re-enter your password") }}
+                    {% for error in form.confirm_password.errors %}
+                    <p class="text-status-cancelled text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                {{ form.submit(class="btn-lift w-full bg-primary hover:bg-peach text-white hover:text-primary-dark font-medium tracking-widest uppercase text-xs py-3.5 rounded-full
+                    transition-colors shadow-matte cursor-pointer") }}
+            </form>
+
+            <p class="text-center text-[11px] text-ink-muted mt-6 leading-relaxed">
+                By creating an account, you agree to our Terms of Service and Privacy Policy.
+            </p>
+
+            <div class="flex items-center gap-4 my-8">
+                <div class="flex-1 h-px bg-border"></div>
+                <span class="text-[11px] text-ink-muted uppercase tracking-widest">Already A Member</span>
+                <div class="flex-1 h-px bg-border"></div>
+            </div>
+
+            <p class="text-center text-sm text-ink-muted">
+                Already have an account?
+                <a href="{{ url_for('auth.login') }}" class="text-peach-dark font-semibold hover:text-primary transition-colors">Log in</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

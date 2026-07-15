@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Log In{% endblock %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}w-full p-0{% endblock %}
+{% block show_footer %}{% endblock %}
+
+{% block content %}
+<div class="w-full min-h-[calc(100vh-88px)] grid grid-cols-1 lg:grid-cols-[1.6fr_1fr]">
+
+    <!-- ===================== LEFT: LUXURY PHOTO ===================== -->
+    <div class="hidden lg:block relative overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1760013529817-f50db943ffe2?w=1400&q=80&auto=format&fit=crop"
+             alt="{{ store_name }} — soft folded knitwear from our collection" class="absolute inset-0 w-full h-full object-cover" loading="eager" decoding="async" fetchpriority="high">
+        <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/15 via-transparent to-transparent"></div>
+
+        <div class="relative z-10 h-full flex flex-col justify-between p-12 xl:p-16">
+            <a href="{{ url_for('index') }}"
+               class="inline-flex items-center gap-2.5 bg-primary/95 backdrop-blur-sm pl-4 pr-5 py-2.5 rounded-full self-start shadow-elevated">
+                <span class="w-1.5 h-1.5 rounded-full bg-peach"></span>
+                <span class="font-serif text-lg font-semibold text-peach tracking-tight">{{ store_name }}</span>
+            </a>
+            <div class="max-w-md">
+                <p class="text-peach text-xs font-medium tracking-[0.3em] uppercase mb-4">Considered Goods, Since Day One</p>
+                <h2 class="font-serif text-4xl xl:text-[42px] text-cream font-semibold leading-[1.15] mb-5">
+                    Crafted Pieces,<br>Kept For Generations
+                </h2>
+                <p class="text-cream/75 text-[15px] leading-relaxed">
+                    Sign in to track your orders, revisit your wishlist, and step back into a
+                    collection of leather, gold, and fine cloth — built to outlast trend.
+                </p>
+                <div class="flex items-center gap-8 mt-8 pt-8 border-t border-cream/20">
+                    <div>
+                        <p class="font-serif text-2xl text-cream font-semibold">180+</p>
+                        <p class="text-cream/60 text-[11px] uppercase tracking-widest mt-1">Curated Pieces</p>
+                    </div>
+                    <div>
+                        <p class="font-serif text-2xl text-cream font-semibold">5</p>
+                        <p class="text-cream/60 text-[11px] uppercase tracking-widest mt-1">Collections</p>
+                    </div>
+                    <div>
+                        <p class="font-serif text-2xl text-cream font-semibold">30-Day</p>
+                        <p class="text-cream/60 text-[11px] uppercase tracking-widest mt-1">Easy Returns</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== RIGHT: LOGIN FORM ===================== -->
+    <div class="flex items-center justify-center px-6 py-8 sm:py-10 relative">
+        <div class="bg-blur-circle" style="width: 260px; height: 260px; top: 8%; right: -10%; background: radial-gradient(circle, rgba(199,160,89,0.16) 0%, transparent 72%);" aria-hidden="true"></div>
+        <div class="w-full max-w-md relative z-10 reveal">
+
+            <a href="{{ url_for('index') }}" class="lg:hidden font-serif text-2xl font-semibold text-[#2C2B26] block text-center mb-6">
+                {{ store_name }}
+            </a>
+
+            <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-2">Welcome Back</p>
+            <h1 class="font-serif text-2xl md:text-3xl font-semibold text-[#2C2B26] mb-2 leading-tight">Login to Your Account</h1>
+            <p class="text-ink-muted text-sm mb-6">Enter your details below to continue where you left off.</p>
+
+            <form method="POST" novalidate class="space-y-4">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-ink mb-1.5">Email Address</label>
+                    {{ form.email(class="w-full px-4 py-2.5 rounded-xl2 border border-border bg-card
+                        focus:outline-none focus:ring-2 focus:ring-peach/40 focus:border-peach transition-all text-sm shadow-matte",
+                        placeholder="you@example.com") }}
+                    {% for error in form.email.errors %}
+                    <p class="text-status-cancelled text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-ink mb-1.5">Password</label>
+                    <div class="relative">
+                        {{ form.password(id="password", class="w-full px-4 py-2.5 pr-11 rounded-xl2 border border-border bg-card
+                            focus:outline-none focus:ring-2 focus:ring-peach/40 focus:border-peach transition-all text-sm shadow-matte",
+                            placeholder="Enter your password") }}
+                        <button type="button" onclick="togglePasswordVisibility('password', this)"
+                                aria-label="Show password"
+                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-primary-dark transition-colors">
+                            <i data-lucide="eye" class="w-4 h-4 pointer-events-none"></i>
+                        </button>
+                    </div>
+                    {% for error in form.password.errors %}
+                    <p class="text-status-cancelled text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 text-ink-muted cursor-pointer">
+                        {{ form.remember_me(class="rounded border-border text-primary focus:ring-peach/40") }}
+                        Remember me
+                    </label>
+                    <a href="#" class="text-peach-dark font-medium hover:text-primary transition-colors">Forgot password?</a>
+                </div>
+
+                {{ form.submit(class="btn-lift w-full bg-primary hover:bg-peach text-white hover:text-primary-dark font-medium tracking-widest uppercase text-xs py-3 rounded-full
+                    transition-colors shadow-matte cursor-pointer") }}
+            </form>
+
+            <div class="flex items-center gap-4 my-5">
+                <div class="flex-1 h-px bg-border"></div>
+                <span class="text-[11px] text-ink-muted uppercase tracking-widest">Or</span>
+                <div class="flex-1 h-px bg-border"></div>
+            </div>
+
+            <a href="{{ url_for('auth.google_login') }}"
+               class="btn-lift w-full flex items-center justify-center gap-3 bg-card border border-border hover:border-peach
+                      text-ink font-medium text-sm py-3 rounded-full transition-colors shadow-matte">
+                <svg class="w-6 h-6 flex-shrink-0" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.87c2.27-2.09 3.55-5.17 3.55-8.87z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.07 7.93-2.9l-3.87-3c-1.08.72-2.45 1.15-4.06 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A11.997 11.997 0 0 0 12 24z"/>
+                    <path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 0 1 0-4.58v-3.1H1.27a12 12 0 0 0 0 10.78l4-3.1z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.94 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.27 6.61l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/>
+                </svg>
+                Continue with Google
+            </a>
+
+            <div class="flex items-center gap-4 my-6">
+                <div class="flex-1 h-px bg-border"></div>
+                <span class="text-[11px] text-ink-muted uppercase tracking-widest">Why Join Us</span>
+                <div class="flex-1 h-px bg-border"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6 text-center">
+                <div>
+                    <div class="w-9 h-9 rounded-full bg-peach/15 text-peach-dark flex items-center justify-center mx-auto mb-1.5">
+                        <i data-lucide="truck" class="w-4 h-4"></i>
+                    </div>
+                    <p class="text-[10px] text-ink-muted leading-tight">Order Tracking</p>
+                </div>
+                <div>
+                    <div class="w-9 h-9 rounded-full bg-peach/15 text-peach-dark flex items-center justify-center mx-auto mb-1.5">
+                        <i data-lucide="heart" class="w-4 h-4"></i>
+                    </div>
+                    <p class="text-[10px] text-ink-muted leading-tight">Saved Wishlist</p>
+                </div>
+                <div>
+                    <div class="w-9 h-9 rounded-full bg-peach/15 text-peach-dark flex items-center justify-center mx-auto mb-1.5">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </div>
+                    <p class="text-[10px] text-ink-muted leading-tight">Early Access</p>
+                </div>
+            </div>
+
+            <p class="text-center text-sm text-ink-muted">
+                New here?
+                <a href="{{ url_for('auth.register') }}" class="text-peach-dark font-semibold hover:text-primary transition-colors">Create an account</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // ---- Password show/hide toggle ----
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const showing = input.type === "password";
+        input.type = showing ? "text" : "password";
+        btn.setAttribute("aria-label", showing ? "Hide password" : "Show password");
+        btn.innerHTML = `<i data-lucide="${showing ? "eye-off" : "eye"}" class="w-4 h-4 pointer-events-none"></i>`;
+        if (window.lucide) lucide.createIcons();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ error_code }} — {{ store_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes err-fade-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .err-card { animation: err-fade-in 0.7s ease-out both; }
+        .err-blob { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) { .err-card { animation: none; } }
+    </style>
+</head>
+<body class="bg-[#3F4A38] min-h-screen flex items-center justify-center font-sans relative overflow-hidden">
+    <div class="err-blob" style="width: 380px; height: 380px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(199,160,89,0.22) 0%, transparent 72%);" aria-hidden="true"></div>
+    <div class="err-blob" style="width: 320px; height: 320px; bottom: -100px; right: -80px; background: radial-gradient(circle, rgba(139,107,74,0.20) 0%, transparent 72%);" aria-hidden="true"></div>
+    <div class="err-card bg-white border border-[#EDE4D2] rounded-xl shadow-lg p-10 text-center max-w-md relative z-10">
+        <p class="text-6xl font-bold text-[#3F4A38] mb-2">{{ error_code }}</p>
+        <h1 class="text-xl font-semibold text-[#3F4A38] mb-2">{{ message }}</h1>
+        <p class="text-[#7A7264] mb-6">Let's get you back to shopping.</p>
+        <a href="/" class="inline-block bg-[#C7A059] hover:bg-[#B08D5B] text-[#3F4A38] hover:text-white px-6 py-2 rounded-lg transition-colors font-medium">
+            Back to {{ store_name }}
+        </a>
+    </div>
+</body>
+</html>

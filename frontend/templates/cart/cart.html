@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Your Cart{% endblock %}
+{% from "_macros.html" import empty_state %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}max-w-7xl mx-auto px-6 pt-[110px] pb-16{% endblock %}
+
+{% block content %}
+<div class="mb-10 reveal relative">
+    <div class="ambient-blob ambient-blob-sage" style="width: 260px; height: 260px; top: -70px; left: -90px;" aria-hidden="true"></div>
+    <div class="ambient-blob ambient-blob-gold" style="width: 180px; height: 180px; top: -10px; right: -30px;" aria-hidden="true"></div>
+    <svg class="bg-wave-pattern" style="bottom: -14px; opacity: 0.7;" viewBox="0 0 1400 60" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,30 C 233,5 466,55 700,30 C 933,5 1166,55 1400,30" fill="none" stroke="#C7A059" stroke-opacity="0.16" stroke-width="1.5"></path>
+    </svg>
+    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Your Selection</p>
+    <h1 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-3">Your Cart</h1>
+    <p class="text-ink-muted text-sm max-w-2xl">Review your pieces before checkout — every item is held for you, not reserved, so complete your order when you're ready.</p>
+</div>
+
+{% if cart_items %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- ===================== CART ITEMS ===================== -->
+    <div class="lg:col-span-2 space-y-4 reveal" style="transition-delay: 80ms;">
+        {% for item in cart_items %}
+        <div class="bg-card border border-border rounded-xl2 shadow-matte p-4 flex items-center gap-4">
+            <a href="{{ url_for('products.detail', slug=item.product.slug) }}"
+               class="w-20 h-20 rounded-lg bg-subtle/60 overflow-hidden flex-shrink-0">
+                {% if item.product.image_url %}
+                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                {% endif %}
+            </a>
+
+            <div class="flex-1 min-w-0">
+                <a href="{{ url_for('products.detail', slug=item.product.slug) }}"
+                   class="text-sm font-medium text-ink hover:text-primary-dark transition-colors">
+                    {{ item.product.name }}
+                </a>
+                <p class="text-sm text-ink-muted">{{ currency }}{{ "%.2f"|format(item.product.price) }} each</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('cart.update_cart_item', item_id=item.id) }}" class="flex items-center gap-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}"
+                       onchange="this.form.submit()"
+                       class="w-16 px-2 py-1.5 rounded-lg border border-border bg-subtle/40 text-sm text-center
+                              focus:outline-none focus:ring-2 focus:ring-primary/40">
+            </form>
+
+            <p class="text-sm font-semibold text-ink w-20 text-right">{{ currency }}{{ "%.2f"|format(item.subtotal) }}</p>
+
+            <form method="POST" action="{{ url_for('cart.remove_from_cart', item_id=item.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="text-status-cancelled hover:text-status-cancelled/70 transition-colors p-1" aria-label="Remove">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ===================== ORDER SUMMARY ===================== -->
+    <div class="lg:col-span-1 reveal" style="transition-delay: 180ms;">
+        <div class="bg-card border border-border rounded-xl2 shadow-matte p-6 sticky top-24">
+            <h3 class="font-serif text-sm font-semibold text-ink mb-4">Order Summary</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between text-ink-muted">
+                    <span>Subtotal ({{ summary.item_count }} items)</span>
+                    <span>{{ currency }}{{ "%.2f"|format(summary.subtotal) }}</span>
+                </div>
+                <div class="flex justify-between text-ink-muted">
+                    <span>Shipping</span>
+                    <span>
+                        {% if summary.shipping_fee == 0 %}
+                        <span class="text-primary-dark font-medium">Free</span>
+                        {% else %}
+                        {{ currency }}{{ "%.2f"|format(summary.shipping_fee) }}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="border-t border-border pt-3 flex justify-between font-semibold text-ink">
+                    <span>Total</span>
+                    <span>{{ currency }}{{ "%.2f"|format(summary.total) }}</span>
+                </div>
+            </div>
+
+            <a href="{{ url_for('cart.checkout') }}"
+               class="block w-full text-center mt-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium
+                      transition-colors shadow-matte">
+                Proceed to Checkout
+            </a>
+            <a href="{{ url_for('products.listing') }}"
+               class="block w-full text-center mt-2 py-2.5 rounded-lg text-primary-dark text-sm font-medium hover:underline">
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+
+{% else %}
+{{ empty_state('shopping-bag', 'Your Cart Is Empty', 'Nothing here yet — browse the collection and add pieces you love.', 'Start Shopping', url_for('products.listing')) }}
+{% endif %}
+{% endblock %}

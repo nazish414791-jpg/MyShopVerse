@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+{% from "_macros.html" import pagination_nav, empty_state %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}w-full{% endblock %}
+
+{% block content %}
+<div class="w-full -mt-[88px] pt-[110px] pb-14 bg-[#F7F1E7] relative overflow-hidden">
+    <div class="bg-blur-circle" style="width: 320px; height: 320px; top: -18%; right: -8%; background: radial-gradient(circle, rgba(199,160,89,0.16) 0%, transparent 72%);" aria-hidden="true"></div>
+    <svg class="bg-wave-pattern" style="bottom: -6px;" viewBox="0 0 1400 90" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,45 C 233,10 466,80 700,45 C 933,10 1166,80 1400,45" fill="none" stroke="#C7A059" stroke-opacity="0.16" stroke-width="1.5"></path>
+    </svg>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-10">
+        <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Your Account</p>
+        <h1 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-3">My Orders</h1>
+        <p class="text-ink-muted text-sm max-w-2xl">A complete record of every order placed with {{ store_name }}, from pending to delivered.</p>
+    </div>
+</div>
+
+<div class="w-full bg-[#F9F4EA]">
+<div class="max-w-7xl mx-auto px-6 lg:px-10 py-12">
+
+{% if orders %}
+<div class="bg-card border border-border rounded-xl2 shadow-matte overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-ink-muted border-b border-border bg-subtle/40">
+                <th class="px-5 py-3 font-medium">Order</th>
+                <th class="px-5 py-3 font-medium">Date</th>
+                <th class="px-5 py-3 font-medium">Items</th>
+                <th class="px-5 py-3 font-medium">Payment</th>
+                <th class="px-5 py-3 font-medium">Status</th>
+                <th class="px-5 py-3 font-medium text-right">Total</th>
+                <th class="px-5 py-3"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr class="border-b border-border/60 last:border-0 hover:bg-subtle/30 transition-colors">
+                <td class="px-5 py-4 font-medium text-ink">{{ order.order_number }}</td>
+                <td class="px-5 py-4 text-ink-muted">{{ order.created_at.strftime("%b %d, %Y") }}</td>
+                <td class="px-5 py-4 text-ink-muted">{{ order.item_count }}</td>
+                <td class="px-5 py-4 text-ink-muted">{{ order.payment_method }}</td>
+                <td class="px-5 py-4">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium
+                        {% if order.status == 'Delivered' %} bg-status-success/25 text-primary-dark
+                        {% elif order.status == 'Shipped' %} bg-peach/40 text-peach-dark
+                        {% elif order.status == 'Cancelled' %} bg-status-cancelled/25 text-status-cancelled
+                        {% else %} bg-status-pending/25 text-status-cancelled
+                        {% endif %}">
+                        {{ order.status }}
+                    </span>
+                </td>
+                <td class="px-5 py-4 text-right font-semibold text-ink">{{ currency }}{{ "%.2f"|format(order.total) }}</td>
+                <td class="px-5 py-4 text-right">
+                    <a href="{{ url_for('orders.order_detail', order_number=order.order_number) }}"
+                       class="text-primary-dark text-xs font-medium hover:underline">View Details</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ===================== PAGINATION ===================== -->
+{% if pagination.pages > 1 %}
+<div class="mt-6">
+    {{ pagination_nav(pagination, 'orders.order_history') }}
+</div>
+{% endif %}
+
+{% else %}
+{{ empty_state('package', 'No Orders Yet', 'Once you place an order, you\'ll be able to track it here.', 'Start Shopping', url_for('products.listing')) }}
+{% endif %}
+</div>
+</div>
+{% endblock %}

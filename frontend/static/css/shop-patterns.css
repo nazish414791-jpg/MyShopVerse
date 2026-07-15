@@ -1,0 +1,193 @@
+/* =====================================================================
+   Shared premium patterns — reused across home, listing, category, and
+   product-detail pages so the whole shopping flow feels like one
+   connected design system rather than a patchwork of one-off styles.
+   ===================================================================== */
+
+/* ---- Product card (shared by _macros.html product_card) ---- */
+.luxury-card {
+    box-shadow: 0 1px 3px rgba(44, 43, 38, 0.06), 0 1px 2px rgba(44, 43, 38, 0.04);
+    transition: transform 0.55s cubic-bezier(.16,1,.3,1), box-shadow 0.55s cubic-bezier(.16,1,.3,1);
+    will-change: transform;
+}
+.luxury-card:hover {
+    transform: translateY(-9px);
+    box-shadow: 0 32px 60px -22px rgba(44, 43, 38, 0.30), 0 12px 26px -12px rgba(44, 43, 38, 0.16);
+}
+.img-zoom-slow { transition: transform 1.6s cubic-bezier(.16,1,.3,1); }
+.group:hover .img-zoom-slow { transform: scale(1.09); }
+.wishlist-btn { transition: opacity 300ms ease, transform 300ms cubic-bezier(.34,1.56,.64,1), background-color 250ms ease, color 250ms ease; }
+.wishlist-btn:hover { transform: scale(1.14); color: #B08D5B; }
+.wishlist-btn:active { transform: scale(0.9); }
+.wishlist-btn.is-active i { fill: currentColor; color: #B08D5B; }
+.btn-lift {
+    transition: transform 300ms cubic-bezier(.16,1,.3,1), background-color 320ms ease, color 320ms ease, box-shadow 300ms ease, letter-spacing 300ms ease;
+}
+.btn-lift:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -10px rgba(44,43,38,0.30); letter-spacing: 0.5px; }
+.btn-lift:active { transform: translateY(0px) scale(0.98); box-shadow: 0 4px 10px -6px rgba(44,43,38,0.24); }
+
+/* ---- Generic gallery-image hover zoom (product detail main image) ---- */
+.img-zoom { transition: transform 1.3s cubic-bezier(.16,1,.3,1); }
+.img-zoom-hover:hover .img-zoom { transform: scale(1.06); }
+
+/* ---- FAQ / specs accordion (matches home.html's pattern exactly) ---- */
+.faq-accordion-item { background: #F7F1E7; border: 1.5px solid rgba(44,43,38,0.08); border-radius: 20px; overflow: hidden; transition: border-color 300ms ease; }
+.faq-accordion-item:hover { border-color: rgba(44,43,38,0.18); }
+.faq-toggle {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 22px 28px; text-align: left; cursor: pointer; background: transparent; border: 0;
+    font-family: 'Playfair Display', ui-serif, Georgia, serif; font-size: 17px; color: #2C2B26; font-weight: 600;
+}
+.faq-chevron { color: #C7A059; transition: transform 350ms cubic-bezier(.22,.61,.36,1); }
+.faq-toggle[aria-expanded="true"] .faq-chevron { transform: rotate(180deg); }
+.faq-panel { max-height: 0; overflow: hidden; transition: max-height 400ms cubic-bezier(.22,.61,.36,1); }
+.faq-panel.is-open { max-height: 320px; }
+.faq-panel-inner { padding: 0 28px 24px; font-size: 15px; line-height: 1.7; color: #7A7264; }
+
+/* ---- Trust badges row (icon-circle hover pattern) — tuned for the navy trust bands ---- */
+.trust-item { transition: transform 0.3s ease; cursor: default; }
+.trust-item:hover { transform: translateY(-4px); }
+.trust-item:hover .trust-icon { transform: scale(1.1) rotate(-4deg); background: #C7A059; color: #55624A; }
+.trust-item:hover .trust-heading { color: #DCC48D; }
+.trust-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(199,160,89,0.16); color: #C7A059;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    transition: transform 350ms cubic-bezier(.34,1.56,.64,1), background-color 350ms ease, color 350ms ease;
+}
+.trust-heading { transition: color 0.25s ease; }
+
+/* ---- Background richness treatments for light sections ---- */
+.bg-grain-texture {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.bg-blur-circle { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; }
+.bg-wave-pattern { position: absolute; left: 0; right: 0; pointer-events: none; z-index: 0; opacity: 0.9; }
+.bg-luxury-grid {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.05;
+    background-image:
+        linear-gradient(#55624A 1px, transparent 1px),
+        linear-gradient(90deg, #55624A 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 85%);
+}
+
+/* ---- Gallery thumbnail cross-fade (product detail) ---- */
+.gallery-main-fade { transition: opacity 180ms ease; }
+.gallery-main-fade.is-fading { opacity: 0; }
+.gallery-thumb {
+    border: 1.5px solid transparent; border-radius: 14px; overflow: hidden; cursor: pointer;
+    transition: border-color 250ms ease, transform 250ms ease;
+}
+.gallery-thumb:hover { transform: translateY(-2px); }
+.gallery-thumb.is-active { border-color: #C7A059; }
+
+/* ---- Star rating bar (reviews breakdown) ---- */
+.rating-bar-track { background: #ECE2CD; border-radius: 999px; height: 8px; overflow: hidden; }
+.rating-bar-fill { background: #C7A059; height: 100%; border-radius: 999px; transition: width 900ms cubic-bezier(.22,.61,.36,1); }
+
+/* =====================================================================
+   Image loading skeletons — shimmer placeholder while product/gallery
+   photos load, then a soft fade-in once the browser has painted them.
+   Usage: wrap an <img class="skeleton-img" loading="lazy"> — the shared
+   base.js listener adds .is-loaded on the 'load' event.
+   ===================================================================== */
+.skeleton-img {
+    opacity: 0; transition: opacity 500ms cubic-bezier(.16,1,.3,1);
+    background: linear-gradient(100deg, #EDE6D6 20%, #F7F1E7 40%, #EDE6D6 60%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+.skeleton-img.is-loaded { opacity: 1; animation: none; background: none; }
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+/* Generic block skeleton (used for card-shaped placeholders / SSR loading states) */
+.skeleton-block {
+    background: linear-gradient(100deg, #EDE6D6 20%, #F7F1E7 40%, #EDE6D6 60%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+    border-radius: 1.5rem;
+}
+
+/* =====================================================================
+   Empty-state illustration frame — soft radial backdrop behind the
+   inline SVG illustrations used for empty cart / wishlist / orders /
+   no-results states, so they feel designed rather than dropped in.
+   ===================================================================== */
+.empty-state-card { position: relative; overflow: hidden; }
+.empty-state-illustration {
+    width: 168px; height: 168px; margin: 0 auto 28px; position: relative; z-index: 1;
+}
+.empty-state-illustration::before {
+    content: ''; position: absolute; inset: -20%; z-index: -1; border-radius: 50%;
+    background: radial-gradient(circle, rgba(199,160,89,0.14) 0%, transparent 70%);
+}
+.empty-state-icon {
+    width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 20px;
+    background: rgba(199,160,89,0.14); color: #B08D5B;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* =====================================================================
+   Success / confirmation animation — animated checkmark stroke-draw
+   with a soft scale-in ring, used on order confirmation.
+   ===================================================================== */
+.success-check-circle {
+    animation: success-scale-in 500ms cubic-bezier(.34,1.56,.64,1) both;
+}
+.success-check-path {
+    stroke-dasharray: 48; stroke-dashoffset: 48;
+    animation: success-draw 480ms cubic-bezier(.65,0,.35,1) 350ms forwards;
+}
+.success-ring {
+    animation: success-ring-pulse 1.6s cubic-bezier(.16,1,.3,1) 700ms infinite;
+}
+@keyframes success-scale-in {
+    0% { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+@keyframes success-draw {
+    to { stroke-dashoffset: 0; }
+}
+@keyframes success-ring-pulse {
+    0% { transform: scale(1); opacity: 0.55; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* =====================================================================
+   Accessibility — visible, on-brand focus rings for keyboard users,
+   and full respect for prefers-reduced-motion.
+   ===================================================================== */
+a:focus-visible, button:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #C7A059;
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+.skip-to-content {
+    position: fixed; top: -100px; left: 16px; z-index: 200;
+    background: #55624A; color: #F7F1E7; padding: 12px 20px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    transition: top 250ms ease;
+}
+.skip-to-content:focus { top: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@keyframes btn-ripple {
+    to { transform: scale(2.4); opacity: 0; }
+}

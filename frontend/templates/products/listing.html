@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+{% block title %}{{ active_category.name if active_category else "Shop All" }}{% endblock %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}w-full{% endblock %}
+
+{% from "_macros.html" import product_card, testimonial_band, pagination_nav, empty_state %}
+
+{% block content %}
+
+<!-- ===================== HERO / INTRO BAND — full viewport width ===================== -->
+<div class="w-full -mt-[88px] pt-[110px] pb-14 bg-[#F7F1E7] relative overflow-hidden">
+    <div class="bg-blur-circle" style="width: 380px; height: 380px; top: -16%; left: -8%; background: radial-gradient(circle, rgba(199,160,89,0.18) 0%, transparent 72%);" aria-hidden="true"></div>
+    <div class="bg-blur-circle" style="width: 320px; height: 320px; bottom: -22%; right: -6%; background: radial-gradient(circle, rgba(44,43,38,0.05) 0%, transparent 72%);" aria-hidden="true"></div>
+    <svg class="bg-wave-pattern" style="bottom: -6px;" viewBox="0 0 1400 90" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,45 C 233,10 466,80 700,45 C 933,10 1166,80 1400,45" fill="none" stroke="#C7A059" stroke-opacity="0.16" stroke-width="1.5"></path>
+    </svg>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-10">
+        {% if active_category %}
+        <section class="relative rounded-xl2 overflow-hidden mb-10 shadow-elevated">
+            <div class="absolute inset-0 bg-cover bg-center"
+                 style="background-image: url('{{ active_category.image_url or 'https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=1600&q=80&auto=format&fit=crop' }}');"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/75 to-primary/30"></div>
+            <div class="relative px-8 py-16 md:px-16 md:py-20 max-w-xl">
+                <p class="text-peach text-xs font-medium tracking-[0.3em] uppercase mb-3">The Collection</p>
+                <h1 class="font-serif text-4xl md:text-5xl font-bold text-cream mb-4">{{ active_category.name }}</h1>
+                <p class="text-cream/75 text-sm md:text-base leading-relaxed mb-5">
+                    {{ active_category.description or "A considered edit of pieces, chosen for lasting quality." }}
+                </p>
+                <span class="inline-flex items-center gap-2 text-[11px] font-medium tracking-widest uppercase text-primary-dark bg-peach rounded-full px-4 py-2">
+                    <i data-lucide="package" class="w-3.5 h-3.5"></i>
+                    {{ active_category.products.filter_by(is_active=True).count() }} piece{{ 's' if active_category.products.filter_by(is_active=True).count() != 1 else '' }}
+                </span>
+            </div>
+        </section>
+        {% else %}
+        <div class="mb-10 max-w-2xl">
+            <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">{{ store_name }} Catalog</p>
+            <h1 class="font-serif text-4xl md:text-5xl font-semibold text-[#2C2B26] mb-4 leading-tight">Timeless Pieces for<br>Considered Living</h1>
+            <p class="text-ink-muted text-sm md:text-base max-w-2xl mb-2 leading-relaxed">
+                Leather goods, fine jewellery, tailored fashion, and considered accessories —
+                each piece chosen for material honesty and lasting craftsmanship.
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- ===================== SEARCH BAR ===================== -->
+        <form method="GET" action="{{ url_for('products.listing') }}" class="flex flex-col sm:flex-row gap-3">
+            {% if active_category %}<input type="hidden" name="category" value="{{ active_category.slug }}">{% endif %}
+            <div class="relative flex-1">
+                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/>
+                </svg>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search the collection..."
+                       class="w-full pl-10 pr-4 py-3 rounded-xl2 border border-border bg-card
+                              focus:outline-none focus:ring-2 focus:ring-peach/40 focus:border-peach text-sm shadow-matte">
+            </div>
+            <select name="sort" onchange="this.form.submit()"
+                    class="px-4 py-3 rounded-xl2 border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-peach/40 shadow-matte">
+                <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+                <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>Name: A-Z</option>
+            </select>
+            <button type="submit" class="btn-lift px-7 py-3 rounded-xl2 bg-primary hover:bg-peach text-white hover:text-primary-dark text-sm font-medium
+                           tracking-wide uppercase transition-colors shadow-matte">
+                Search
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if view_mode == "catalog" %}
+
+    <!-- ===================== USP / TRUST STRIP — full width, navy + gold ===================== -->
+    <div class="w-full bg-primary relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="trust-item text-center">
+                <div class="trust-icon"><i data-lucide="truck" class="w-5 h-5"></i></div>
+                <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Free Worldwide Shipping</p>
+            </div>
+            <div class="trust-item text-center">
+                <div class="trust-icon"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+                <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Secure Checkout</p>
+            </div>
+            <div class="trust-item text-center">
+                <div class="trust-icon"><i data-lucide="hand" class="w-5 h-5"></i></div>
+                <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Handcrafted Quality</p>
+            </div>
+            <div class="trust-item text-center">
+                <div class="trust-icon"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></div>
+                <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Easy 30-Day Returns</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SHOP BY COLLECTION — full width, cream ===================== -->
+    <div class="w-full bg-[#F9F4EA]" id="categories">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+            <div class="flex items-end justify-between mb-8">
+                <div>
+                    <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-2">Curated For You</p>
+                    <h2 class="font-serif text-2xl md:text-3xl font-semibold text-[#2C2B26]">Shop by Collection</h2>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-5">
+                {% for cat in categories %}
+                <a href="{{ url_for('products.listing', category=cat.slug) }}"
+                   class="group relative rounded-xl2 overflow-hidden aspect-[4/5] shadow-matte hover-lift">
+                    {% if cat.image_url %}
+                    <img src="{{ cat.image_url }}" alt="{{ cat.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async">
+                    {% else %}
+                    <div class="w-full h-full bg-primary-light/30"></div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/10 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-4">
+                        <p class="font-serif text-cream text-lg font-semibold">{{ cat.name }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== EDITOR'S PICKS — editorial split, paragraph left / photo right ===================== -->
+    <div class="w-full bg-[#EDE2C9]">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="reveal">
+                    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Editor's Picks</p>
+                    <h2 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-5 leading-tight">Handpicked, Not Algorithm-Picked</h2>
+                    <p class="text-ink-muted text-[15px] leading-relaxed mb-4">
+                        Every season, our team of buyers sits down with each new arrival in hand —
+                        weighing it, wearing it, living with it for a few days — before it earns a place
+                        in the collection. Nothing is added simply because it sells.
+                    </p>
+                    <p class="text-ink-muted text-[15px] leading-relaxed mb-7">
+                        These are the pieces our own team reaches for first: the tote that survives a decade
+                        of commutes, the ring that becomes an heirloom, the scent that turns a room into a memory.
+                        Bestsellers, chosen by people, not by traffic.
+                    </p>
+                    <a href="{{ url_for('products.listing', sort='price_desc') }}"
+                       class="btn-lift inline-flex items-center gap-2 bg-primary hover:bg-peach text-white hover:text-primary-dark text-xs font-medium tracking-widest uppercase px-7 py-3.5 rounded-full">
+                        Shop The Edit <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+                <div class="relative reveal" style="transition-delay: 100ms;">
+                    <div class="relative rounded-xl2 overflow-hidden aspect-[4/5] shadow-elevated">
+                        <img src="{{ (featured_products[0].image_url if featured_products else 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=1200&q=80&auto=format&fit=crop') }}"
+                             alt="Editor's Pick" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                    </div>
+                    {% if featured_products %}
+                    <div class="absolute -bottom-6 -left-6 hidden sm:block bg-card rounded-xl2 shadow-elevated p-4 max-w-[220px] border border-border">
+                        <p class="text-[10px] text-peach-dark uppercase tracking-widest font-semibold mb-1">Team Favourite</p>
+                        <p class="font-serif text-sm font-semibold text-ink mb-1 line-clamp-1">{{ featured_products[0].name }}</p>
+                        <p class="text-sm font-semibold text-ink">{{ currency }}{{ "%.2f"|format(featured_products[0].price) }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== CATEGORY ROWS — alternating cream / beige bands ===================== -->
+    {% for section in catalog_sections %}
+    <div class="w-full {{ 'bg-[#F9F4EA]' if loop.index0 % 2 == 0 else 'bg-[#EDE2C9]' }}">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+            <div class="flex items-end justify-between mb-6">
+                <div>
+                    <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-2">Collection</p>
+                    <h2 class="font-serif text-2xl md:text-3xl font-semibold text-[#2C2B26]">{{ section.category.name }}</h2>
+                </div>
+                <a href="{{ url_for('products.listing', category=section.category.slug) }}"
+                   class="hidden sm:block text-sm font-medium text-peach-dark hover:text-primary transition-colors">
+                    View All &rarr;
+                </a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-5">
+                {% for product in section.products %}
+                    {{ product_card(product, compact=true) }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- ===================== EDITORIAL / OUR CRAFT — full width split ===================== -->
+    <div class="w-full bg-[#F9F4EA]">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="relative rounded-xl2 overflow-hidden aspect-[4/3] shadow-elevated reveal order-2 lg:order-1">
+                    <img src="{{ (categories[0].image_url if categories else 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=1200&q=80&auto=format&fit=crop') }}"
+                         alt="Our Craft" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                </div>
+                <div class="order-1 lg:order-2 reveal" style="transition-delay: 100ms;">
+                    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Our Philosophy</p>
+                    <h2 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-5 leading-tight">Crafted With Intention,<br>Made to Last</h2>
+                    <p class="text-ink-muted text-[15px] leading-relaxed mb-4">
+                        Every piece in the {{ store_name }} collection is chosen for material honesty —
+                        full-grain leather, precious metals, and natural fibres that only improve with age.
+                        We work with a small circle of makers who share our belief that quality speaks quietly.
+                    </p>
+                    <p class="text-ink-muted text-[15px] leading-relaxed mb-7">
+                        No fast fashion, no shortcuts — just considered objects built to be part of your life
+                        for years, not seasons.
+                    </p>
+                    <a href="{{ url_for('index') }}#about"
+                       class="btn-lift inline-flex items-center gap-2 bg-primary hover:bg-peach text-white hover:text-primary-dark text-xs font-medium tracking-widest uppercase px-7 py-3.5 rounded-full">
+                        Learn Our Story <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== TESTIMONIALS — full width, premium ===================== -->
+    {{ testimonial_band(bg_class="bg-[#F9F4EA]") }}
+
+    <!-- ===================== NEWSLETTER — full width, navy + gold ===================== -->
+    <div class="w-full bg-primary relative overflow-hidden">
+        <div class="bg-blur-circle" style="width: 340px; height: 340px; top: -20%; right: -6%; background: radial-gradient(circle, rgba(199,160,89,0.20) 0%, transparent 72%);" aria-hidden="true"></div>
+        <div class="relative z-10 max-w-3xl mx-auto px-6 py-16 text-center">
+            <p class="text-peach text-xs font-medium tracking-[0.3em] uppercase mb-3">Stay Inspired</p>
+            <h2 class="font-serif text-2xl md:text-3xl font-semibold text-cream mb-4">Join the {{ store_name }} List</h2>
+            <p class="text-cream/70 text-sm md:text-base mb-7 leading-relaxed">
+                New arrivals, considered edits, and early access to limited pieces — straight to your inbox.
+            </p>
+            <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onsubmit="return false;">
+                <input type="email" placeholder="Your email address" required
+                       class="flex-1 px-5 py-3.5 rounded-full border border-cream/25 bg-cream/10 text-cream placeholder-cream/50 text-sm focus:outline-none focus:ring-2 focus:ring-peach/50 focus:border-peach">
+                <button type="submit"
+                        class="btn-lift px-7 py-3.5 rounded-full bg-peach hover:bg-cream text-primary-dark text-xs font-medium tracking-widest uppercase transition-colors">
+                    Sign Up
+                </button>
+            </form>
+        </div>
+    </div>
+
+{% elif view_mode == "category" %}
+
+    <!-- ===================== TRADITIONAL HISTORY — full width editorial split, per category ===================== -->
+    {% set history = {
+        "Bags": {
+            "eyebrow": "A Heritage in Leather",
+            "title": "The Age-Old Craft of Leather Goods",
+            "p1": "Long before leather bags were a fashion statement, they were a necessity of travel and trade — carried by merchants along the Silk Road and hand-stitched by saddlers who passed their technique from master to apprentice across generations.",
+            "p2": "Full-grain leather, vegetable tanning, and hand-finished brass hardware remain, to this day, the mark of a bag built to outlive its owner. Our collection honours that same lineage — pieces designed to develop character with every year of use, not fade with the season."
+        },
+        "Fashion": {
+            "eyebrow": "The Art of Tailoring",
+            "title": "A Tradition Woven Through Centuries",
+            "p1": "Tailoring as a craft dates back to the guilds of medieval Europe, where a garment's worth was measured in the precision of its seams and the hand of its cloth — not the label sewn inside it.",
+            "p2": "That same discipline — considered cuts, natural fibres, construction meant to be let out or taken in for decades — shapes every piece we carry. Clothing built the old way, for a wardrobe that ages with intention rather than trend."
+        },
+        "Jewellery": {
+            "eyebrow": "Gold, Stone & Time",
+            "title": "An Heirloom Tradition, Reimagined",
+            "p1": "From the goldsmiths of ancient Alexandria to the ateliers of Renaissance Florence, fine jewellery has always been more than adornment — it has marked milestones, carried memory, and been passed down as inheritance.",
+            "p2": "Our goldsmiths still set every stone by hand, in the same unhurried tradition. Each piece is made to be worn today and handed down tomorrow — a small, lasting object with a story built to grow."
+        },
+        "Electronics": {
+            "eyebrow": "Precision, Perfected",
+            "title": "A Legacy of Fine Instruments",
+            "p1": "The pursuit of precision — in a watch movement, a camera lens, a listening device — has driven craftsmen for centuries, from the first mechanical timepieces of 17th-century Europe to the studio audio equipment of today.",
+            "p2": "We carry pieces that carry on that pursuit: instruments built with the same reverence for detail, meant to be used daily and trusted for years — not replaced with the next release cycle."
+        },
+        "Home Accessories": {
+            "eyebrow": "Shaped By Hand",
+            "title": "The Enduring Craft of Home",
+            "p1": "Ceramics and woven textiles are among the oldest crafts known to us — shaped on the potter's wheel and the hand loom long before either had a name, born from the simple need to make a house feel like home.",
+            "p2": "Our collection continues that lineage: stoneware thrown by hand, linen woven on traditional looms, objects with quiet texture and natural variation — the kind that only comes from something made, not manufactured."
+        },
+    } %}
+    {% set h = history.get(active_category.name) %}
+    <div class="w-full bg-[#EDE2C9]">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="reveal">
+                    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">{{ h.eyebrow if h else "Our Heritage" }}</p>
+                    <h2 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-5 leading-tight">{{ h.title if h else (active_category.name + " — A Tradition of Craft") }}</h2>
+                    <p class="text-ink-muted text-[15px] leading-relaxed mb-4">
+                        {{ h.p1 if h else (active_category.description or "Every piece in this collection carries forward a tradition of craftsmanship, chosen for material honesty over trend.") }}
+                    </p>
+                    <p class="text-ink-muted text-[15px] leading-relaxed">
+                        {{ h.p2 if h else "We work with makers who honour that history in every piece, so what you bring home is built to last for years, not seasons." }}
+                    </p>
+                </div>
+                <div class="relative rounded-xl2 overflow-hidden aspect-[4/3] shadow-elevated reveal" style="transition-delay: 100ms;">
+                    <img src="{{ active_category.image_url or 'https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=1200&q=80&auto=format&fit=crop' }}"
+                         alt="{{ active_category.name }} heritage" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full bg-[#F9F4EA]">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-14">
+
+        <!-- ===================== RELATED COLLECTIONS ===================== -->
+        <section class="mb-12">
+            <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-4">Explore More Collections</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {% for cat in related_categories %}
+                <a href="{{ url_for('products.listing', category=cat.slug) }}"
+                   class="group relative rounded-xl overflow-hidden aspect-[3/2] shadow-matte">
+                    {% if cat.image_url %}
+                    <img src="{{ cat.image_url }}" alt="{{ cat.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async">
+                    {% else %}
+                    <div class="w-full h-full bg-primary-light/30"></div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/10 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                        <p class="font-serif text-cream text-sm font-semibold">{{ cat.name }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- ===================== SUBCATEGORY PILLS ===================== -->
+        {% if subcategory_names %}
+        <section class="mb-10">
+            <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-4">Shop {{ active_category.name }} By Type</p>
+            <div class="flex flex-wrap gap-3">
+                {% for subcat in subcategory_names %}
+                <a href="{{ url_for('products.listing', category=active_category.slug, subcategory=subcat) }}"
+                   class="px-5 py-2.5 rounded-full bg-card border border-border text-ink text-sm font-medium hover:border-peach hover:text-primary transition-colors shadow-matte">
+                    {{ subcat }}
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        </div>
+    </div>
+
+    <!-- ===================== SUBCATEGORY-SECTIONED PRODUCTS — alternating full-width bands ===================== -->
+    {% for section in subcategory_sections %}
+    <div class="w-full {{ 'bg-[#EDE2C9]' if loop.index0 % 2 == 0 else 'bg-[#F9F4EA]' }}">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+            <div class="flex items-end justify-between mb-6">
+                <div>
+                    <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-2">{{ active_category.name }}</p>
+                    <h2 class="font-serif text-2xl md:text-3xl font-semibold text-[#2C2B26]">{{ section.name }}</h2>
+                </div>
+                <a href="{{ url_for('products.listing', category=active_category.slug, subcategory=section.name) }}"
+                   class="hidden sm:block text-sm font-medium text-peach-dark hover:text-primary transition-colors">
+                    View All &rarr;
+                </a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-5">
+                {% for product in section.products %}
+                    {{ product_card(product, compact=true) }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- ===================== TESTIMONIALS — full width, premium, above footer ===================== -->
+    {{ testimonial_band(bg_class="bg-[#EDE2C9]" if subcategory_sections|length % 2 == 0 else "bg-[#F9F4EA]") }}
+
+{% else %}
+
+    <div class="w-full bg-[#F9F4EA]">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-14">
+
+        {% if active_category %}
+        <section class="mb-12">
+            <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-4">Explore More Collections</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {% for cat in related_categories %}
+                <a href="{{ url_for('products.listing', category=cat.slug) }}"
+                   class="group relative rounded-xl overflow-hidden aspect-[3/2] shadow-matte">
+                    {% if cat.image_url %}
+                    <img src="{{ cat.image_url }}" alt="{{ cat.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async">
+                    {% else %}
+                    <div class="w-full h-full bg-primary-light/30"></div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/10 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                        <p class="font-serif text-cream text-sm font-semibold">{{ cat.name }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <!-- ===================== SIDEBAR ===================== -->
+            <aside class="lg:col-span-1 space-y-6">
+                <div class="bg-card border border-border rounded-xl2 shadow-matte p-5">
+                    <h3 class="font-serif text-sm font-semibold text-ink mb-3">Categories</h3>
+                    <div class="space-y-1">
+                        <a href="{{ url_for('products.listing') }}"
+                           class="block px-3 py-2 rounded-lg text-sm transition-colors
+                           {% if not active_category %} bg-primary/15 text-primary-dark font-medium {% else %} text-ink-muted hover:bg-subtle {% endif %}">
+                            All Products
+                        </a>
+                        {% for cat in categories %}
+                        <a href="{{ url_for('products.listing', category=cat.slug) }}"
+                           class="block px-3 py-2 rounded-lg text-sm transition-colors
+                           {% if active_category and active_category.id == cat.id %} bg-primary/15 text-primary-dark font-medium {% else %} text-ink-muted hover:bg-subtle {% endif %}">
+                            {{ cat.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if active_category and subcategory_names %}
+                <div class="bg-card border border-border rounded-xl2 shadow-matte p-5">
+                    <h3 class="font-serif text-sm font-semibold text-ink mb-3">Type</h3>
+                    <div class="space-y-1">
+                        <a href="{{ url_for('products.listing', category=active_category.slug) }}"
+                           class="block px-3 py-2 rounded-lg text-sm transition-colors
+                           {% if not active_subcategory %} bg-primary/15 text-primary-dark font-medium {% else %} text-ink-muted hover:bg-subtle {% endif %}">
+                            All {{ active_category.name }}
+                        </a>
+                        {% for subcat in subcategory_names %}
+                        <a href="{{ url_for('products.listing', category=active_category.slug, subcategory=subcat) }}"
+                           class="block px-3 py-2 rounded-lg text-sm transition-colors
+                           {% if active_subcategory == subcat %} bg-primary/15 text-primary-dark font-medium {% else %} text-ink-muted hover:bg-subtle {% endif %}">
+                            {{ subcat }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="bg-card border border-border rounded-xl2 shadow-matte p-5">
+                    <h3 class="font-serif text-sm font-semibold text-ink mb-3">Price Range</h3>
+                    <form method="GET" action="{{ url_for('products.listing') }}" class="space-y-3">
+                        {% if active_category %}<input type="hidden" name="category" value="{{ active_category.slug }}">{% endif %}
+                        {% if active_subcategory %}<input type="hidden" name="subcategory" value="{{ active_subcategory }}">{% endif %}
+                        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                        <div class="flex gap-2">
+                            <input type="number" name="min_price" value="{{ min_price }}" placeholder="Min"
+                                   class="w-1/2 px-3 py-2 rounded-lg border border-border bg-subtle text-sm focus:outline-none focus:ring-2 focus:ring-peach/40">
+                            <input type="number" name="max_price" value="{{ max_price }}" placeholder="Max"
+                                   class="w-1/2 px-3 py-2 rounded-lg border border-border bg-subtle text-sm focus:outline-none focus:ring-2 focus:ring-peach/40">
+                        </div>
+                        <button type="submit" class="w-full py-2 rounded-lg bg-peach/40 hover:bg-peach/60 text-peach-dark text-sm font-medium transition-colors">
+                            Apply Filter
+                        </button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- ===================== PRODUCT GRID ===================== -->
+            <div class="lg:col-span-3">
+                {% if active_subcategory %}
+                <p class="text-ink-muted text-sm mb-4">
+                    Showing <span class="text-peach-dark font-medium">{{ active_subcategory }}</span>
+                    {% if active_category %} in {{ active_category.name }}{% endif %}
+                </p>
+                {% endif %}
+                {% if products %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {% for product in products %}
+                    <div class="reveal" style="transition-delay: {{ (loop.index0 % 4) * 80 }}ms;">
+                        {{ product_card(product) }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if pagination.pages > 1 %}
+                <div class="mt-10">
+                    {{ pagination_nav(pagination, 'products.listing', {'q': query, 'category': active_category.slug if active_category else None, 'subcategory': active_subcategory, 'sort': sort}) }}
+                </div>
+                {% endif %}
+
+                {% else %}
+                {{ empty_state('search-x', 'No Pieces Found', "We couldn't find anything matching your search or filters. Try broadening your criteria or explore a different collection.", 'View All Products', url_for('products.listing')) }}
+                {% endif %}
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- ===================== TESTIMONIALS — full width, premium, above footer ===================== -->
+    {{ testimonial_band(bg_class="bg-[#EDE2C9]") }}
+{% endif %}
+{% endblock %}

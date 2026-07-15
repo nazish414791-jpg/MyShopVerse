@@ -1,0 +1,68 @@
+{% extends "admin/_layout.html" %}
+{% block title %}{{ customer.full_name }}{% endblock %}
+
+{% block admin_content %}
+<nav class="text-sm text-ink-muted mb-6">
+    <a href="{{ url_for('admin.manage_customers') }}" class="hover:text-peach transition-colors">Customers</a>
+    <span class="mx-2">/</span>
+    <span class="text-ink font-medium">{{ customer.full_name }}</span>
+</nav>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1">
+        <div class="bg-card border border-border rounded-xl2 shadow-matte p-6 text-center">
+            <div class="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-xl font-semibold mx-auto mb-3">
+                {{ customer.initials }}
+            </div>
+            <h2 class="text-lg font-semibold text-ink">{{ customer.full_name }}</h2>
+            <p class="text-sm text-ink-muted mb-4">{{ customer.email }}</p>
+            <div class="text-left text-sm space-y-2 border-t border-border pt-4">
+                <p><span class="text-ink-muted">Phone</span><br>{{ customer.phone or "Not provided" }}</p>
+                <p><span class="text-ink-muted">City</span><br>{{ customer.city or "Not provided" }}</p>
+                <p><span class="text-ink-muted">Joined</span><br>{{ customer.created_at.strftime("%B %d, %Y") }}</p>
+                <p><span class="text-ink-muted">Total Spent</span><br><span class="text-ink font-semibold">{{ currency }}{{ "%.2f"|format(total_spent) }}</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2">
+        <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+            <h3 class="text-sm font-semibold text-ink mb-4">Order History</h3>
+            {% if orders %}
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-ink-muted border-b border-border">
+                        <th class="pb-2 font-medium">Order</th>
+                        <th class="pb-2 font-medium">Date</th>
+                        <th class="pb-2 font-medium">Status</th>
+                        <th class="pb-2 font-medium text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr class="border-b border-border/60 last:border-0">
+                        <td class="py-3 font-medium text-ink">
+                            <a href="{{ url_for('admin.admin_order_detail', order_number=order.order_number) }}" class="hover:text-primary-dark">{{ order.order_number }}</a>
+                        </td>
+                        <td class="py-3 text-ink-muted">{{ order.created_at.strftime("%b %d, %Y") }}</td>
+                        <td class="py-3">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-medium
+                                {% if order.status == 'Delivered' %} bg-status-success/25 text-primary-dark
+                                {% elif order.status == 'Shipped' %} bg-peach/40 text-peach-dark
+                                {% elif order.status == 'Cancelled' %} bg-status-cancelled/25 text-status-cancelled
+                                {% else %} bg-status-pending/25 text-status-cancelled {% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-right font-medium">{{ currency }}{{ "%.2f"|format(order.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-sm text-ink-muted py-8 text-center">This customer hasn't placed any orders yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

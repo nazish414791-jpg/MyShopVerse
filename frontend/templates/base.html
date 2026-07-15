@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ store_name }}{% endblock %}</title>
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='img/favicon-192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <meta name="theme-color" content="#F8F5F0">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+                        serif: ['"Playfair Display"', 'ui-serif', 'Georgia', 'serif'],
+                    },
+                    colors: {
+                        background: '#F4EFE6',   // ivory — main page background (site-wide)
+                        surface: '#EDE6D6',      // deeper ivory — misc chrome
+                        charcoal: '#2C2B26',     // footer background
+                        cream: '#F7F1E7',        // warm cream — light text & accents on dark sage
+                        subtle: '#EDE4D2',       // light neutral — inputs, hover rows, placeholders
+                        card: '#FFFFFF',         // product & content cards
+                        border: '#E3D9C4',       // subtle borders inside light cards
+
+                        primary: {
+                            DEFAULT: '#55624A',   // deep sage — primary buttons / brand color
+                            dark: '#333A2A',
+                            light: '#6E7856',
+                        },
+                        peach: {
+                            DEFAULT: '#C7A059',   // muted gold — accent, hover state
+                            dark: '#B08D5B',
+                            light: '#DCC48D',
+                        },
+
+                        ink: {
+                            DEFAULT: '#33322C',   // charcoal — text inside light cards
+                            muted: '#7A7264',      // warm taupe — secondary text
+                        },
+
+                        status: {
+                            pending: '#C17B52',
+                            shipped: '#C7A059',
+                            success: '#4F5B3E',
+                            cancelled: '#A8452F',
+                        },
+
+                        chart: {
+                            sales: '#8B9B7E',
+                            orders: '#C7A059',
+                        },
+                    },
+                    boxShadow: {
+                        matte: '0 1px 3px rgba(44, 43, 38, 0.06), 0 1px 2px rgba(44, 43, 38, 0.04)',
+                        elevated: '0 20px 50px -12px rgba(44, 43, 38, 0.35)',
+                        glow: '0 0 0 1px rgba(199, 160, 89, 0.25), 0 12px 32px -8px rgba(199, 160, 89, 0.25)',
+                    },
+                    borderRadius: {
+                        xl2: '1.5rem',   // 24px — the site-wide luxury corner radius
+                        xl3: '1.75rem',  // 28px — reserved for large hero/campaign imagery
+                    },
+                    letterSpacing: {
+                        luxe: '0.22em',
+                    },
+                },
+            },
+        };
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700;800&family=Petit+Formal+Script&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shop-patterns.css') }}">
+    {% block extra_head %}{% endblock %}
+
+    <style>
+        /* ---- Elegant scroll-reveal (fade + slide), respects reduced motion ---- */
+        .reveal { opacity: 0; transform: translateY(22px) scale(0.98); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .reveal.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+        .reveal-scale { opacity: 0; transform: translateY(40px) scale(0.96); transition: opacity 600ms ease-out, transform 600ms ease-out; }
+        .reveal-scale.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+        /* ---- Side-slide variants, for paragraph/image variety across pages ---- */
+        .reveal-left { opacity: 0; transform: translateX(-32px); transition: opacity 0.65s ease-out, transform 0.65s cubic-bezier(.22,.61,.36,1); }
+        .reveal-left.is-visible { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(32px); transition: opacity 0.65s ease-out, transform 0.65s cubic-bezier(.22,.61,.36,1); }
+        .reveal-right.is-visible { opacity: 1; transform: translateX(0); }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal, .reveal-scale, .reveal-left, .reveal-right { opacity: 1; transform: none; transition: none; }
+        }
+
+        /* ==== Ambient luxury background texture — soft sage/gold/muted-brown ====
+           Placed once per section wrapper (position:relative required on the
+           wrapper). Purely decorative, aria-hidden, never intercepts clicks. */
+        .ambient-blob { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: -1; }
+        .ambient-blob-sage   { background: radial-gradient(circle, rgba(85,98,74,0.20) 0%, transparent 72%); }
+        .ambient-blob-brown  { background: radial-gradient(circle, rgba(139,107,74,0.18) 0%, transparent 72%); }
+        .ambient-blob-gold   { background: radial-gradient(circle, rgba(199,160,89,0.16) 0%, transparent 72%); }
+
+        /* Thin decorative wave line — sits along a section edge, echoes the
+           "waves" motif in sage + gold, at very low opacity so it reads as
+           texture rather than clutter. */
+        .ambient-wave { position: absolute; left: 0; right: 0; pointer-events: none; z-index: 0; width: 100%; height: auto; opacity: 0.9; }
+
+        /* ==== Premium 3D tilt system ====
+           Applied via JS to any element with class "tilt-3d". Gives a subtle
+           perspective rotation that follows the cursor, plus a soft moving
+           highlight — the classic "premium product card" 3D feel. */
+        .tilt-3d {
+            transform-style: preserve-3d;
+            transition: transform 500ms cubic-bezier(.22,.61,.36,1), box-shadow 500ms ease;
+            will-change: transform;
+        }
+        .tilt-3d-inner { transform-style: preserve-3d; }
+        .tilt-3d-layer { transform: translateZ(28px); transform-style: preserve-3d; }
+        .tilt-shine {
+            position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+            background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.35), transparent 55%);
+            opacity: 0; transition: opacity 300ms ease; mix-blend-mode: overlay;
+        }
+        .tilt-3d:hover .tilt-shine { opacity: 1; }
+        @media (prefers-reduced-motion: reduce), (hover: none) {
+            .tilt-3d { transform: none !important; }
+            .tilt-shine { display: none; }
+        }
+
+        /* ==== Hero 3D letter-in reveal ==== */
+        .hero-3d-word { display: inline-block; perspective: 900px; }
+        .hero-3d-letter {
+            display: inline-block;
+            transform: rotateX(-90deg) translateY(0.3em);
+            opacity: 0;
+            transform-origin: 50% 100%;
+            animation: hero-letter-in 700ms cubic-bezier(.22,.61,.36,1) forwards;
+            animation-play-state: paused;
+        }
+        /* Only start the letter flip once the parent .reveal section has actually
+           faded in — otherwise the animation finishes while still invisible and
+           the section just fades in with the letters already in place. */
+        .reveal.is-visible .hero-3d-letter,
+        .reveal-scale.is-visible .hero-3d-letter { animation-play-state: running; }
+        @keyframes hero-letter-in {
+            to { transform: rotateX(0deg) translateY(0); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .hero-3d-letter { animation: none; opacity: 1; transform: none; }
+        }
+
+        /* ---- Glass surface helper ---- */
+        .glass { background: rgba(247, 241, 231, 0.06); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        /* ---- Hover elevation for cards ---- */
+        .hover-lift { transition: transform 0.45s cubic-bezier(.22,.61,.36,1), box-shadow 0.45s cubic-bezier(.22,.61,.36,1); }
+        .hover-lift:hover { transform: translateY(-6px); }
+        /* ---- Image zoom on hover ---- */
+        .img-zoom { transition: transform 1.1s cubic-bezier(.22,.61,.36,1); }
+        .group:hover .img-zoom { transform: scale(1.08); }
+
+        /* ================= LUXURY NAVBAR — stable, flicker-free ================= */
+        /* The nav is taken out of document flow (position: fixed). Its state can
+           only flip at most once per animation frame and uses enter/exit
+           hysteresis (see the script below), so it never oscillates. No
+           announcement bar, no glass, no blur, no gradients — just a full-width
+           bar (100vw) with a max-width 1400px inner row, 88px tall over the
+           hero and 72px once scrolled. */
+        .nav-bar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            height: 88px;
+            background-color: transparent;
+            border-bottom: 1px solid transparent;
+            box-shadow: none;
+            transition: background-color 350ms ease-in-out, border-color 350ms ease-in-out,
+                        box-shadow 350ms ease-in-out, height 350ms ease-in-out;
+        }
+        .nav-inner { max-width: 1400px; height: 88px; transition: height 350ms ease-in-out; }
+        .nav-bar.is-scrolled {
+            height: 72px;
+            background-color: #F7F1E7;
+            border-bottom-color: rgba(44, 43, 38, 0.08);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+        }
+        .nav-bar.is-scrolled .nav-inner { height: 72px; }
+        /* Reserves the exact space the fixed navbar occupies at its tallest,
+           so page content is never covered and never shifts. */
+        .nav-spacer { height: 88px; flex-shrink: 0; }
+
+        .nav-logo { font-size: 1.5rem; letter-spacing: -0.01em; transition: color 380ms ease-in-out; }
+        .nav-link, .nav-icon-btn i { transition: color 250ms ease; }
+        .nav-link:hover { color: #C7A059; }
+        .nav-icon-btn { transition: background-color 250ms ease, transform 250ms ease; }
+        .nav-icon-btn:hover { background-color: rgba(44, 43, 38, 0.06); transform: translateY(-1px); }
+        .nav-icon-btn:hover i { transform: scale(1.05); }
+        .nav-icon-btn i { transition: color 250ms ease, transform 250ms ease; }
+        /* Scroll-driven color shift (white -> navy) runs slower/smoother than hover */
+        .nav-bar.is-scrolled .nav-link,
+        .nav-bar.is-scrolled .nav-icon-btn i { transition-duration: 380ms; transition-timing-function: ease-in-out; }
+
+        /* Theme = dark hero underneath (default site navy bg): cream/white type */
+        .nav-theme-dark .nav-logo,
+        .nav-theme-dark .nav-link,
+        .nav-theme-dark .nav-icon-btn i { color: #F7F1E7; }
+        .nav-theme-dark .nav-icon-btn:hover { background-color: rgba(247, 241, 231, 0.1); }
+
+        /* Theme = light hero underneath (cream homepage hero): navy type */
+        .nav-theme-light .nav-logo,
+        .nav-theme-light .nav-link,
+        .nav-theme-light .nav-icon-btn i { color: #55624A; }
+        .nav-theme-light .nav-icon-btn:hover { background-color: rgba(44, 43, 38, 0.06); }
+
+        /* Once scrolled, background is always solid cream -> always navy/dark type */
+        .nav-bar.is-scrolled .nav-logo,
+        .nav-bar.is-scrolled .nav-link,
+        .nav-bar.is-scrolled .nav-icon-btn i { color: #55624A !important; }
+        .nav-bar.is-scrolled .nav-icon-btn:hover { background-color: rgba(44, 43, 38, 0.06) !important; }
+
+        /* Full-screen mobile menu — slides in from the right, solid cream, no glass/blur. */
+        .nav-mobile-panel {
+            position: fixed; inset: 0; z-index: 55;
+            background-color: #F7F1E7; color: #55624A;
+            display: flex; flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 400ms cubic-bezier(.22,.61,.36,1);
+            overflow-y: auto;
+        }
+        .nav-mobile-panel.is-open { transform: translateX(0); }
+        .nav-mobile-panel a { color: #55624A; }
+        .nav-mobile-close { transition: transform 250ms ease, color 250ms ease; }
+        .nav-mobile-close:hover { transform: rotate(90deg); color: #C7A059; }
+        .nav-mobile-link {
+            font-family: "Playfair Display", ui-serif, Georgia, serif;
+            font-size: 2rem; font-weight: 600; letter-spacing: -0.01em;
+            position: relative; display: inline-block; width: fit-content;
+        }
+        .nav-mobile-link::after {
+            content: ''; position: absolute; left: 0; bottom: -4px;
+            width: 0; height: 1px; background: #C7A059;
+            transition: width 300ms cubic-bezier(.22,.61,.36,1);
+        }
+        .nav-mobile-link:hover::after { width: 100%; }
+
+        /* ================= FOOTER — animated gold underline on hover ================= */
+        footer .footer-col a:not(.social-icon) {
+            position: relative;
+            display: inline-block;
+            transition: color 250ms ease;
+        }
+        footer .footer-col a:not(.social-icon)::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: -2px;
+            width: 0; height: 1px;
+            background: #C7A059;
+            transition: width 300ms cubic-bezier(.22,.61,.36,1);
+        }
+        footer .footer-col a:not(.social-icon):hover::after { width: 100%; }
+        .social-icon { transition: transform 300ms cubic-bezier(.22,.61,.36,1), color 250ms ease, border-color 250ms ease; }
+        .social-icon:hover { transform: translateY(-2px); }
+        .footer-newsletter { transition: box-shadow 300ms ease, border-color 300ms ease; }
+        .footer-newsletter:focus-within { box-shadow: 0 0 0 3px rgba(199,160,89,0.25); border-color: #C7A059; }
+        .payment-chip {
+            font-size: 10px; letter-spacing: 0.06em; color: rgba(44,43,38,0.45);
+            border: 1px solid rgba(44,43,38,0.15); border-radius: 6px;
+            padding: 4px 9px; transition: border-color 250ms ease, color 250ms ease;
+        }
+        .payment-chip:hover { border-color: #C7A059; color: #B08D5B; }
+
+        /* ---- Premium pagination (shared across shop, orders, admin tables) ---- */
+        .pagination-arrow, .pagination-pill {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 40px; height: 40px; padding: 0 6px;
+            border-radius: 9999px; border: 1px solid rgba(44,43,38,0.12);
+            color: #33322C; font-size: 14px; font-weight: 500;
+            background: transparent;
+            transition: background-color 250ms ease, border-color 250ms ease, color 250ms ease, transform 250ms ease;
+        }
+        .pagination-arrow:hover, .pagination-pill:hover {
+            background: #55624A; border-color: #55624A; color: #F7F1E7; transform: translateY(-1px);
+        }
+        .pagination-pill.is-active {
+            background: #C7A059; border-color: #C7A059; color: #55624A; font-weight: 600;
+            cursor: default; pointer-events: none;
+        }
+        .pagination-arrow.is-disabled {
+            opacity: 0.35; pointer-events: none;
+        }
+        .pagination-ellipsis {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 40px; height: 40px; color: rgba(44,43,38,0.35); font-size: 14px;
+        }
+
+        /* ---- Premium empty state ---- */
+        .empty-state-icon {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: rgba(199,160,89,0.12); color: #B08D5B;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 22px;
+        }
+    </style>
+</head>
+<body class="{% block body_bg %}bg-background text-cream{% endblock %} font-sans min-h-screen flex flex-col antialiased">
+<a href="#main-content" class="skip-to-content">Skip to content</a>
+
+    <!-- ===================== NAVBAR ===================== -->
+    {# nav-theme: 'light' = navbar sits on a light (cream) hero and starts with dark ink type;
+       default = navbar sits on the site's navy background and starts with cream type. #}
+    <header id="site-header"
+            data-theme="{% block nav_theme %}dark{% endblock %}"
+            class="nav-bar nav-theme-{% block nav_theme_class %}dark{% endblock %}">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between nav-inner">
+            <a href="{{ url_for('products.listing') }}" class="font-serif font-semibold tracking-tight nav-logo">
+                {{ store_name }}
+            </a>
+
+            <nav class="hidden md:flex items-center gap-9 text-[11px] font-medium tracking-[0.2em] uppercase nav-links">
+                <a href="{{ url_for('index') }}" class="relative py-1 nav-link after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-peach after:transition-all after:duration-[250ms] hover:after:w-full">Home</a>
+                <a href="{{ url_for('products.listing') }}" class="relative py-1 nav-link after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-peach after:transition-all after:duration-[250ms] hover:after:w-full">Shop</a>
+                <a href="{{ url_for('products.listing') }}#categories" class="relative py-1 nav-link after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-peach after:transition-all after:duration-[250ms] hover:after:w-full">Collections</a>
+                <a href="{{ url_for('about') }}" class="relative py-1 nav-link after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-peach after:transition-all after:duration-[250ms] hover:after:w-full">About</a>
+                <a href="#contact" class="relative py-1 nav-link after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-peach after:transition-all after:duration-[250ms] hover:after:w-full">Contact</a>
+            </nav>
+
+            <div class="flex items-center gap-1 md:gap-2">
+                <a href="{{ url_for('products.listing') }}" class="p-2 rounded-full nav-icon-btn" aria-label="Search">
+                    <i data-lucide="search" class="w-[17px] h-[17px]"></i>
+                </a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('cart.view_wishlist') }}" class="p-2 rounded-full nav-icon-btn" aria-label="Wishlist">
+                    <i data-lucide="heart" class="w-[17px] h-[17px]"></i>
+                </a>
+                <a href="{{ url_for('cart.view_cart') }}" class="relative p-2 rounded-full nav-icon-btn" aria-label="Cart">
+                    <i data-lucide="shopping-bag" class="w-[17px] h-[17px]"></i>
+                    {% if cart_item_count and cart_item_count > 0 %}
+                    <span class="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-[3px] rounded-full bg-peach text-primary-dark text-[9px] font-bold flex items-center justify-center leading-none">{{ cart_item_count if cart_item_count < 100 else '99+' }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('auth.profile') }}" class="p-2 rounded-full nav-icon-btn" aria-label="Account">
+                    <i data-lucide="user" class="w-[17px] h-[17px]"></i>
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="p-2 rounded-full nav-icon-btn" aria-label="Wishlist">
+                    <i data-lucide="heart" class="w-[17px] h-[17px]"></i>
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="p-2 rounded-full nav-icon-btn" aria-label="Cart">
+                    <i data-lucide="shopping-bag" class="w-[17px] h-[17px]"></i>
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="p-2 rounded-full nav-icon-btn" aria-label="Account">
+                    <i data-lucide="user" class="w-[17px] h-[17px]"></i>
+                </a>
+                {% endif %}
+
+                <button id="mobile-menu-toggle" class="p-2 rounded-full nav-icon-btn md:hidden" aria-label="Open menu">
+                    <i data-lucide="menu" class="w-[18px] h-[18px]"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    <div class="nav-spacer" aria-hidden="true"></div>
+
+    <!-- ===================== MOBILE MENU — full-screen slide-in, cream, no glass ===================== -->
+    <div id="mobile-menu" class="nav-mobile-panel md:hidden">
+        <div class="flex items-center justify-between px-6 h-[88px] flex-shrink-0">
+            <span class="font-serif font-semibold text-2xl text-[#55624A]">{{ store_name }}</span>
+            <button id="mobile-menu-close" class="nav-mobile-close p-2 rounded-full" aria-label="Close menu">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <nav class="flex flex-col px-6 py-6 gap-7">
+            <a href="{{ url_for('index') }}" class="nav-mobile-link">Home</a>
+            <a href="{{ url_for('products.listing') }}" class="nav-mobile-link">Shop</a>
+            <a href="{{ url_for('products.listing') }}#categories" class="nav-mobile-link">Collections</a>
+            <a href="{{ url_for('about') }}" class="nav-mobile-link">About</a>
+            <a href="#contact" class="nav-mobile-link">Contact</a>
+        </nav>
+        <div class="mt-auto px-6 py-8 flex items-center gap-5 border-t border-[#55624A]/10">
+            <a href="{{ url_for('products.listing') }}" aria-label="Search" class="p-2"><i data-lucide="search" class="w-5 h-5"></i></a>
+            <a href="{{ url_for('cart.view_wishlist') if current_user.is_authenticated else url_for('auth.login') }}" aria-label="Wishlist" class="p-2"><i data-lucide="heart" class="w-5 h-5"></i></a>
+            <a href="{{ url_for('cart.view_cart') if current_user.is_authenticated else url_for('auth.login') }}" aria-label="Cart" class="relative p-2">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                {% if cart_item_count and cart_item_count > 0 %}
+                <span class="absolute top-0 right-0 min-w-[16px] h-[16px] px-[3px] rounded-full bg-peach text-primary-dark text-[9px] font-bold flex items-center justify-center leading-none">{{ cart_item_count if cart_item_count < 100 else '99+' }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('auth.profile') if current_user.is_authenticated else url_for('auth.login') }}" aria-label="Account" class="p-2"><i data-lucide="user" class="w-5 h-5"></i></a>
+        </div>
+    </div>
+
+    <!-- ===================== FLASH MESSAGES ===================== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="max-w-7xl mx-auto w-full px-6 pt-4 space-y-2">
+            {% for category, message in messages %}
+            <div class="px-4 py-3 rounded-lg text-sm font-medium border shadow-matte
+                {% if category == 'success' %} bg-status-success/20 text-primary-dark border-status-success/40
+                {% elif category == 'danger' or category == 'error' %} bg-status-cancelled/20 text-status-cancelled border-status-cancelled/40
+                {% elif category == 'warning' %} bg-peach/30 text-peach-dark border-peach/50
+                {% else %} bg-chart-sales/20 text-ink border-chart-sales/40
+                {% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <main id="main-content" class="flex-1 w-full {% block main_class %}max-w-7xl mx-auto px-6 py-8{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    {% block show_footer %}
+    <footer id="contact" class="bg-[#EFE7D4] relative scroll-mt-24 mt-auto">
+        <div class="bg-luxury-grid" aria-hidden="true"></div>
+        <svg class="w-full block relative" style="height: 40px; margin-bottom: -1px;" viewBox="0 0 1400 60" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0,60 C 233,10 466,50 700,22 C 933,-6 1166,42 1400,10 L1400,60 Z" fill="#F9F4EA"></path>
+        </svg>
+
+        <!-- CTA band — organic shape + heading + contact list + photo, Sage Atelier-inspired -->
+        <div class="relative overflow-hidden bg-[#F9F4EA]">
+            <div class="max-w-7xl mx-auto px-6 py-16 lg:py-20">
+                <div class="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr_0.85fr] gap-8 lg:gap-6 items-stretch">
+
+                    <!-- Organic navy CTA blob -->
+                    <div class="relative rounded-[3rem] rounded-tr-xl bg-primary px-9 py-11 lg:py-14 flex flex-col justify-center overflow-hidden">
+                        <div class="bg-blur-circle" style="width: 260px; height: 260px; bottom: -18%; right: -14%; background: radial-gradient(circle, rgba(199,160,89,0.18) 0%, transparent 72%);" aria-hidden="true"></div>
+                        <p class="text-peach text-[11px] font-medium tracking-[3px] uppercase mb-3 relative z-10">Let's Create</p>
+                        <h2 class="font-serif text-3xl md:text-[38px] text-cream font-semibold leading-[1.1] mb-6 relative z-10">
+                            Something Beautiful,<br>Made To Last
+                        </h2>
+                        <a href="{{ url_for('products.listing') }}"
+                           class="btn-lift relative z-10 inline-flex items-center gap-2 self-start bg-peach hover:bg-cream text-primary-dark font-medium text-xs tracking-widest uppercase px-7 py-3.5 rounded-full">
+                            Shop The Collection <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
+
+                    <!-- Contact list -->
+                    <div class="rounded-[3rem] rounded-tl-xl bg-card border border-primary/10 px-8 py-11 lg:py-14 flex flex-col justify-center">
+                        <p class="text-peach-dark text-[11px] font-semibold tracking-[3px] uppercase mb-6">Get In Touch</p>
+                        <div class="space-y-5">
+                            <a href="mailto:vishmanoor9@gmail.com" class="flex items-center gap-3 text-ink hover:text-peach-dark transition-colors text-sm">
+                                <i data-lucide="mail" class="w-4 h-4 text-peach-dark flex-shrink-0"></i> vishmanoor9@gmail.com
+                            </a>
+                            <a href="tel:+923137975113" class="flex items-center gap-3 text-ink hover:text-peach-dark transition-colors text-sm">
+                                <i data-lucide="phone" class="w-4 h-4 text-peach-dark flex-shrink-0"></i> +92 313 7975113
+                            </a>
+                            <span class="flex items-center gap-3 text-ink text-sm">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-peach-dark flex-shrink-0"></i> Islamabad, Pakistan
+                            </span>
+                            <div class="flex gap-2.5 pt-2">
+                                <a href="#" aria-label="Instagram" class="social-icon w-9 h-9 rounded-full border border-primary/15 flex items-center justify-center text-primary/60 hover:text-peach-dark hover:border-peach-dark">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                    </svg>
+                                </a>
+                                <a href="#" aria-label="Facebook" class="social-icon w-9 h-9 rounded-full border border-primary/15 flex items-center justify-center text-primary/60 hover:text-peach-dark hover:border-peach-dark">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                                    </svg>
+                                </a>
+                                <a href="#" aria-label="Pinterest" class="social-icon w-9 h-9 rounded-full border border-primary/15 flex items-center justify-center text-primary/60 hover:text-peach-dark hover:border-peach-dark">
+                                    <i data-lucide="circle-dot" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photo -->
+                    <div class="relative rounded-[3rem] rounded-bl-xl overflow-hidden min-h-[220px] shadow-elevated">
+                        <img src="https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=900&q=80&auto=format&fit=crop"
+                             alt="{{ store_name }} — considered craftsmanship" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async">
+                        <div class="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main footer columns -->
+        <div class="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-4 gap-14 relative">
+            <div class="bg-blur-circle" style="width: 300px; height: 300px; top: -10%; left: 60%; background: radial-gradient(circle, rgba(199,160,89,0.10) 0%, transparent 72%);" aria-hidden="true"></div>
+
+            <!-- Brand + newsletter -->
+            <div class="md:col-span-1 footer-col">
+                <p class="font-serif text-2xl text-[#2C2B26] mb-3">{{ store_name }}</p>
+                <p class="text-ink-muted text-sm leading-relaxed mb-6">
+                    Considered pieces in leather, gold, and fine cloth — built for those who value quality over trend.
+                </p>
+
+                <p class="text-[#2C2B26] text-xs font-semibold tracking-widest uppercase mb-3">Join Our Newsletter</p>
+                <form class="footer-newsletter flex items-center gap-2 bg-card border border-primary/15 rounded-full pl-4 pr-1.5 py-1.5 mb-6"
+                      onsubmit="event.preventDefault(); this.querySelector('button').textContent='Thanks!';">
+                    <input type="email" required placeholder="you@example.com"
+                           class="flex-1 min-w-0 bg-transparent text-ink placeholder-ink-muted/60 text-xs px-1 py-2 focus:outline-none">
+                    <button type="submit"
+                            class="btn-lift flex-shrink-0 px-4 py-2 rounded-full bg-primary hover:bg-peach text-cream hover:text-primary-dark text-[11px] font-medium tracking-wide uppercase transition-colors duration-300">
+                        Join
+                    </button>
+                </form>
+
+                <div class="flex gap-3">
+                    <a href="#" aria-label="Instagram" class="social-icon w-9 h-9 rounded-full border border-primary/15 flex items-center justify-center text-primary/60 hover:text-peach-dark hover:border-peach-dark">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                    </svg>
+                    </a>
+                    <a href="#" aria-label="Facebook" class="social-icon w-9 h-9 rounded-full border border-primary/15 flex items-center justify-center text-primary/60 hover:text-peach-dark hover:border-peach-dark">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                                    </svg>
+                    </a>
+                    <a href="#" aria-label="Pinterest" class="social-icon w-9 h-9 rounded-full border border-primary/15 flex items-center justify-center text-primary/60 hover:text-peach-dark hover:border-peach-dark">
+                        <i data-lucide="circle-dot" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Shop links -->
+            <div class="footer-col">
+                <p class="text-[#2C2B26] text-xs font-semibold tracking-widest uppercase mb-5">Shop</p>
+                <ul class="space-y-3 text-sm text-ink-muted">
+                    <li><a href="{{ url_for('index') }}" class="hover:text-peach-dark">Home</a></li>
+                    <li><a href="{{ url_for('products.listing') }}" class="hover:text-peach-dark">All Products</a></li>
+                    <li><a href="{{ url_for('products.listing', category='bags') }}" class="hover:text-peach-dark">Bags</a></li>
+                    <li><a href="{{ url_for('products.listing', category='fashion') }}" class="hover:text-peach-dark">Fashion</a></li>
+                    <li><a href="{{ url_for('products.listing', category='jewellery') }}" class="hover:text-peach-dark">Jewellery</a></li>
+                    <li><a href="{{ url_for('products.listing', sort='price_asc') }}" class="hover:text-peach-dark">Deals</a></li>
+                </ul>
+            </div>
+
+            <!-- Account links -->
+            <div class="footer-col">
+                <p class="text-[#2C2B26] text-xs font-semibold tracking-widest uppercase mb-5">Help &amp; Support</p>
+                <ul class="space-y-3 text-sm text-ink-muted">
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('auth.profile') }}" class="hover:text-peach-dark">My Profile</a></li>
+                    <li><a href="{{ url_for('orders.order_history') }}" class="hover:text-peach-dark">My Orders</a></li>
+                    <li><a href="{{ url_for('cart.view_wishlist') }}" class="hover:text-peach-dark">Wishlist</a></li>
+                    <li><a href="{{ url_for('cart.view_cart') }}" class="hover:text-peach-dark">Cart</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}" class="hover:text-peach-dark">Log Out</a></li>
+                    {% else %}
+                    <li><a href="{{ url_for('auth.login') }}" class="hover:text-peach-dark">Log In</a></li>
+                    <li><a href="{{ url_for('auth.register') }}" class="hover:text-peach-dark">Create Account</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('about') }}" class="hover:text-peach-dark">About Us</a></li>
+                    <li><a href="#" class="hover:text-peach-dark">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-peach-dark">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact -->
+            <div class="footer-col">
+                <p class="text-[#2C2B26] text-xs font-semibold tracking-widest uppercase mb-5">Get In Touch</p>
+                <ul class="space-y-3.5 text-sm text-ink-muted">
+                    <li class="flex items-start gap-2.5">
+                        <i data-lucide="mail" class="w-4 h-4 mt-0.5 text-peach-dark flex-shrink-0"></i>
+                        <a href="mailto:vishmanoor9@gmail.com" class="hover:text-peach-dark break-all">vishmanoor9@gmail.com</a>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <i data-lucide="phone" class="w-4 h-4 mt-0.5 text-peach-dark flex-shrink-0"></i>
+                        <a href="tel:+923137975113" class="hover:text-peach-dark">+92 313 7975113</a>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-peach-dark flex-shrink-0"></i>
+                        <span>Islamabad, Pakistan</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Payment methods -->
+        <div class="max-w-7xl mx-auto px-6 py-6 border-t border-primary/10 flex flex-wrap items-center justify-end gap-y-4">
+            <div class="flex items-center gap-2">
+                <span class="payment-chip">VISA</span>
+                <span class="payment-chip">MASTERCARD</span>
+                <span class="payment-chip">AMEX</span>
+                <span class="payment-chip">APPLE PAY</span>
+                <span class="payment-chip">PAYPAL</span>
+            </div>
+        </div>
+
+        <!-- Bottom values tagline strip + copyright — sage green band -->
+        <div class="bg-primary">
+            <div class="border-t border-cream/10">
+                <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] tracking-[0.2em] uppercase text-peach/90">
+                    <span>Timeless Quality</span><span class="text-cream/25">•</span>
+                    <span>Ethical Craftsmanship</span><span class="text-cream/25">•</span>
+                    <span>Elegant Design</span><span class="text-cream/25">•</span>
+                    <span>Trusted Service</span>
+                </div>
+            </div>
+
+            <!-- Copyright bar -->
+            <div class="border-t border-cream/10">
+                <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-cream/85">
+                    <p>&copy; {{ current_year|default(2026) }} {{ store_name }}. All rights reserved.</p>
+                    <p class="text-xs text-cream/50">
+                        Crafted with care for those who value quality over trend.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <script>
+        // ---- Icons ----
+        if (window.lucide) { lucide.createIcons(); }
+
+        // ---- Skeleton image loader: fade images in once painted, everywhere ----
+        (function () {
+            const imgs = document.querySelectorAll('img.skeleton-img');
+            imgs.forEach((img) => {
+                if (img.complete && img.naturalWidth > 0) {
+                    img.classList.add('is-loaded');
+                } else {
+                    img.addEventListener('load', () => img.classList.add('is-loaded'), { once: true });
+                    img.addEventListener('error', () => img.classList.add('is-loaded'), { once: true });
+                }
+            });
+        })();
+
+        // ---- Subtle button press ripple (luxury micro-interaction) ----
+        (function () {
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-lift');
+                if (!btn) return;
+                const ripple = document.createElement('span');
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.cssText = `position:absolute;border-radius:50%;pointer-events:none;
+                    width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;
+                    top:${e.clientY - rect.top - size / 2}px;background:rgba(255,255,255,0.35);
+                    transform:scale(0);animation:btn-ripple 600ms ease-out;`;
+                const prevPosition = getComputedStyle(btn).position;
+                if (prevPosition === 'static') btn.style.position = 'relative';
+                btn.style.overflow = 'hidden';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 650);
+            });
+        })();
+
+        // ---- Mobile menu: full-screen slide-in ----
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        const menuClose = document.getElementById('mobile-menu-close');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const openMobileMenu = () => {
+            if (!mobileMenu) return;
+            mobileMenu.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        };
+        const closeMobileMenu = () => {
+            if (!mobileMenu) return;
+            mobileMenu.classList.remove('is-open');
+            document.body.style.overflow = '';
+        };
+        menuToggle && menuToggle.addEventListener('click', openMobileMenu);
+        menuClose && menuClose.addEventListener('click', closeMobileMenu);
+        mobileMenu && mobileMenu.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+
+        // ---- Navbar: transparent over hero, solid cream once scrolled ----
+        // rAF-throttled + hysteresis so the state can only flip at most once per
+        // frame, and never oscillates right at the boundary (enter at 120px,
+        // only release back below 90px). Combined with the navbar's constant,
+        // never-changing height (see CSS), this makes the transition stable.
+        (function () {
+            const header = document.getElementById('site-header');
+            if (!header) return;
+            const ENTER_AT = 120;
+            const EXIT_AT = 90;
+            let isScrolled = false;
+            let ticking = false;
+
+            const applyState = () => {
+                const y = window.scrollY;
+                if (!isScrolled && y > ENTER_AT) {
+                    isScrolled = true;
+                    header.classList.add('is-scrolled');
+                } else if (isScrolled && y < EXIT_AT) {
+                    isScrolled = false;
+                    header.classList.remove('is-scrolled');
+                }
+                ticking = false;
+            };
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(applyState);
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            applyState();
+        })();
+
+        // ---- Premium 3D tilt (hero art, product & feature cards) ----
+        (function () {
+            const els = document.querySelectorAll('.tilt-3d');
+            if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(hover: none)').matches) return;
+
+            const MAX_TILT = 10; // degrees
+
+            els.forEach((el) => {
+                let rect = null;
+
+                const onEnter = () => { rect = el.getBoundingClientRect(); };
+
+                const onMove = (e) => {
+                    if (!rect) rect = el.getBoundingClientRect();
+                    const px = (e.clientX - rect.left) / rect.width;   // 0 -> 1
+                    const py = (e.clientY - rect.top) / rect.height;   // 0 -> 1
+                    const rotY = (px - 0.5) * MAX_TILT * 2;
+                    const rotX = (0.5 - py) * MAX_TILT * 2;
+                    const lift = el.dataset.tiltLift || '0px';
+                    el.style.transform = `perspective(1000px) translateY(${lift}) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.02,1.02,1.02)`;
+                    el.style.setProperty('--mx', `${px * 100}%`);
+                    el.style.setProperty('--my', `${py * 100}%`);
+                };
+
+                const onLeave = () => {
+                    el.style.transform = 'perspective(1000px) translateY(0) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
+                };
+
+                el.addEventListener('mouseenter', onEnter);
+                el.addEventListener('mousemove', onMove);
+                el.addEventListener('mouseleave', onLeave);
+            });
+        })();
+
+        // ---- Hero heading: split into letters for the 3D flip-in reveal ----
+        (function () {
+            document.querySelectorAll('.hero-3d-word').forEach((word) => {
+                const text = word.textContent;
+                word.textContent = '';
+                text.split('').forEach((ch, i) => {
+                    const span = document.createElement('span');
+                    span.className = 'hero-3d-letter';
+                    span.style.animationDelay = `${i * 45}ms`;
+                    span.textContent = ch === ' ' ? '\u00A0' : ch;
+                    word.appendChild(span);
+                });
+            });
+        })();
+
+        // ---- Auto scroll-reveal: tags paragraphs/images/headings that don't already
+        // carry a manual reveal class, alternating variants for visual variety.
+        // Skips form fields, tables, nav/footer (handled separately) and anything
+        // explicitly opted out via .no-auto-reveal, so no functional markup is touched. ----
+        (function () {
+            const variants = ['reveal', 'reveal-left', 'reveal-scale', 'reveal-right'];
+            const hasVariant = (el) => variants.some((v) => el.classList.contains(v));
+            const shouldSkip = (el) =>
+                hasVariant(el) ||
+                el.closest('form, table, nav, footer, .no-auto-reveal, .faq-panel, .hero-3d-word');
+            const candidates = document.querySelectorAll('main p, main img, main h1, main h2, main h3');
+            let i = 0;
+            candidates.forEach((el) => {
+                if (shouldSkip(el)) return;
+                el.classList.add(variants[i % variants.length]);
+                el.style.transitionDelay = `${(i % 4) * 70}ms`;
+                i += 1;
+            });
+        })();
+
+        // ---- Scroll-reveal ----
+        const revealEls = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right');
+        if ('IntersectionObserver' in window && revealEls.length) {
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+            revealEls.forEach((el) => io.observe(el));
+        } else {
+            revealEls.forEach((el) => el.classList.add('is-visible'));
+        }
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

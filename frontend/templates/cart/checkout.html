@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}max-w-7xl mx-auto px-6 lg:px-10 pt-[110px] pb-16{% endblock %}
+
+{% block content %}
+<div class="mb-8 reveal relative">
+    <div class="ambient-blob ambient-blob-brown" style="width: 240px; height: 240px; top: -60px; left: -80px;" aria-hidden="true"></div>
+    <div class="ambient-blob ambient-blob-sage" style="width: 200px; height: 200px; top: 0; right: -50px;" aria-hidden="true"></div>
+    <svg class="bg-wave-pattern" style="bottom: -14px; opacity: 0.7;" viewBox="0 0 1400 60" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,30 C 233,5 466,55 700,30 C 933,5 1166,55 1400,30" fill="none" stroke="#C7A059" stroke-opacity="0.16" stroke-width="1.5"></path>
+    </svg>
+    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Almost There</p>
+    <h1 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-3">Checkout</h1>
+    <p class="text-ink-muted text-sm max-w-2xl">Enter your shipping details and choose how you'd like to pay — Cash on Delivery or a secure card payment via Stripe.</p>
+</div>
+
+<!-- ===================== STEP INDICATOR ===================== -->
+<div class="flex items-center gap-3 sm:gap-6 mb-10 text-xs sm:text-sm font-medium tracking-wide">
+    <span class="flex items-center gap-2 text-ink-muted">
+        <span class="w-6 h-6 rounded-full bg-status-success/20 text-status-success flex items-center justify-center text-[11px]">
+            <i data-lucide="check" class="w-3 h-3"></i>
+        </span>
+        Shopping Cart
+    </span>
+    <span class="flex-1 h-px bg-border max-w-[60px]"></span>
+    <span class="flex items-center gap-2 text-primary-dark">
+        <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[11px] font-semibold">2</span>
+        Shipping &amp; Payment
+    </span>
+    <span class="flex-1 h-px bg-border max-w-[60px]"></span>
+    <span class="flex items-center gap-2 text-ink-muted">
+        <span class="w-6 h-6 rounded-full bg-subtle border border-border flex items-center justify-center text-[11px]">3</span>
+        Confirmation
+    </span>
+</div>
+
+<form method="POST" action="{{ url_for('cart.checkout') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- ===================== SHIPPING + PAYMENT ===================== -->
+        <div class="lg:col-span-2 space-y-6 reveal" style="transition-delay: 100ms;">
+
+            <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+                <h3 class="font-serif text-sm font-semibold text-ink mb-4">Shipping Details</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-ink-muted mb-1">Full Name</label>
+                        <input type="text" name="full_name" required value="{{ current_user.full_name }}"
+                               class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-primary/40">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-ink-muted mb-1">Phone Number</label>
+                        <input type="text" name="phone" value="{{ current_user.phone or '' }}"
+                               class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-primary/40">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-ink-muted mb-1">Address</label>
+                        <textarea name="address_line" required rows="2"
+                                  class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm resize-none
+                                         focus:outline-none focus:ring-2 focus:ring-primary/40">{{ current_user.address_line or '' }}</textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-ink-muted mb-1">City</label>
+                            <input type="text" name="city" required value="{{ current_user.city or '' }}"
+                                   class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm
+                                          focus:outline-none focus:ring-2 focus:ring-primary/40">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-ink-muted mb-1">Postal Code</label>
+                            <input type="text" name="postal_code" value="{{ current_user.postal_code or '' }}"
+                                   class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm
+                                          focus:outline-none focus:ring-2 focus:ring-primary/40">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-ink-muted mb-1">Country</label>
+                        <input type="text" name="country" required value="{{ current_user.country or '' }}"
+                               class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-primary/40">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-ink-muted mb-1">Delivery Notes (optional)</label>
+                        <input type="text" name="notes" placeholder="e.g. Leave at front desk"
+                               class="w-full px-3 py-2.5 rounded-lg border border-border bg-subtle/40 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-primary/40">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+                <h3 class="font-serif text-sm font-semibold text-ink mb-4">Payment Method</h3>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-subtle/40 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+                        <input type="radio" name="payment_method" value="Cash on Delivery" checked class="text-primary focus:ring-primary/40">
+                        <div>
+                            <p class="text-sm font-medium text-ink">Cash on Delivery</p>
+                            <p class="text-xs text-ink-muted">Pay when your order arrives</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-subtle/40 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+                        <input type="radio" name="payment_method" value="Card Payment (Stripe)" class="text-primary focus:ring-primary/40">
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <p class="text-sm font-medium text-ink">Card Payment</p>
+                                <p class="text-xs text-ink-muted">Visa, Mastercard &amp; more — securely processed by Stripe</p>
+                            </div>
+                            <i data-lucide="lock" class="w-3.5 h-3.5 text-ink-muted ml-auto"></i>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== ORDER SUMMARY ===================== -->
+        <div class="lg:col-span-1 reveal" style="transition-delay: 200ms;">
+            <div class="bg-card border border-border rounded-xl2 shadow-matte p-6 sticky top-24">
+                <h3 class="font-serif text-sm font-semibold text-ink mb-4">Order Summary</h3>
+
+                <div class="space-y-3 max-h-64 overflow-y-auto mb-4">
+                    {% for item in cart_items %}
+                    <div class="flex items-center gap-3 text-sm">
+                        <div class="w-10 h-10 rounded-lg bg-subtle/60 overflow-hidden flex-shrink-0">
+                            {% if item.product.image_url %}
+                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="truncate text-ink">{{ item.product.name }}</p>
+                            <p class="text-ink-muted text-xs">Qty: {{ item.quantity }}</p>
+                        </div>
+                        <span class="font-medium text-ink">{{ currency }}{{ "%.2f"|format(item.subtotal) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="border-t border-border pt-3 space-y-2 text-sm">
+                    <div class="flex justify-between text-ink-muted">
+                        <span>Subtotal</span>
+                        <span>{{ currency }}{{ "%.2f"|format(summary.subtotal) }}</span>
+                    </div>
+                    <div class="flex justify-between text-ink-muted">
+                        <span>Shipping</span>
+                        <span>
+                            {% if summary.shipping_fee == 0 %}
+                            <span class="text-primary-dark font-medium">Free</span>
+                            {% else %}
+                            {{ currency }}{{ "%.2f"|format(summary.shipping_fee) }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="border-t border-border pt-3 flex justify-between font-semibold text-ink">
+                        <span>Total</span>
+                        <span>{{ currency }}{{ "%.2f"|format(summary.total) }}</span>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="btn-lift w-full mt-6 py-3.5 rounded-full bg-primary hover:bg-peach text-white hover:text-primary-dark text-xs font-medium tracking-widest uppercase
+                               transition-colors shadow-matte">
+                    Place Order
+                </button>
+
+                <div class="flex items-center justify-center gap-4 mt-5 pt-5 border-t border-border text-ink-muted">
+                    <span class="flex items-center gap-1.5 text-[10px] uppercase tracking-wide">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-peach-dark"></i> Secure
+                    </span>
+                    <span class="flex items-center gap-1.5 text-[10px] uppercase tracking-wide">
+                        <i data-lucide="truck" class="w-3.5 h-3.5 text-peach-dark"></i> Free Shipping
+                    </span>
+                    <span class="flex items-center gap-1.5 text-[10px] uppercase tracking-wide">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-peach-dark"></i> Easy Returns
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Your Wishlist{% endblock %}
+{% from "_macros.html" import empty_state %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}max-w-7xl mx-auto px-6 pt-[110px] pb-16{% endblock %}
+
+{% block content %}
+<div class="mb-10 reveal relative">
+    <div class="ambient-blob ambient-blob-gold" style="width: 230px; height: 230px; top: -70px; left: -70px;" aria-hidden="true"></div>
+    <div class="ambient-blob ambient-blob-sage" style="width: 190px; height: 190px; top: -10px; right: -40px;" aria-hidden="true"></div>
+    <svg class="bg-wave-pattern" style="bottom: -14px; opacity: 0.7;" viewBox="0 0 1400 60" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,30 C 233,5 466,55 700,30 C 933,5 1166,55 1400,30" fill="none" stroke="#C7A059" stroke-opacity="0.16" stroke-width="1.5"></path>
+    </svg>
+    <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3">Saved For Later</p>
+    <h1 class="font-serif text-3xl md:text-4xl font-semibold text-[#2C2B26] mb-3">Your Wishlist</h1>
+    <p class="text-ink-muted text-sm max-w-2xl">Pieces you've set aside — move them to your cart whenever the moment feels right.</p>
+</div>
+
+{% if wishlist_items %}
+<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+    {% for item in wishlist_items %}
+    <div class="bg-card border border-border rounded-xl2 shadow-matte overflow-hidden flex flex-col">
+        <a href="{{ url_for('products.detail', slug=item.product.slug) }}" class="block aspect-square bg-subtle/60 overflow-hidden relative">
+            {% if item.product.image_url %}
+            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
+            {% endif %}
+            <span class="absolute top-2 right-2 text-peach-dark bg-white/80 rounded-full w-7 h-7 flex items-center justify-center">&#9829;</span>
+        </a>
+        <div class="p-4 flex flex-col flex-1">
+            <a href="{{ url_for('products.detail', slug=item.product.slug) }}"
+               class="text-sm font-medium text-ink hover:text-primary-dark transition-colors line-clamp-1">
+                {{ item.product.name }}
+            </a>
+            <p class="text-sm font-semibold text-ink mb-3">{{ currency }}{{ "%.2f"|format(item.product.price) }}</p>
+
+            <div class="mt-auto space-y-2">
+                {% if item.product.in_stock %}
+                <form method="POST" action="{{ url_for('cart.add_to_cart', product_id=item.product.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="w-full py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-xs font-medium transition-colors">
+                        Add to Cart
+                    </button>
+                </form>
+                {% else %}
+                <button disabled class="w-full py-2 rounded-lg bg-border text-ink-muted text-xs font-medium cursor-not-allowed">
+                    Out of Stock
+                </button>
+                {% endif %}
+                <form method="POST" action="{{ url_for('cart.remove_from_wishlist', item_id=item.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="w-full py-2 rounded-lg border border-border text-ink-muted hover:bg-subtle text-xs font-medium transition-colors">
+                        Remove
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+{{ empty_state('heart', 'Your Wishlist Is Empty', 'Save the pieces you love here so they\'re easy to find later.', 'Browse Products', url_for('products.listing')) }}
+{% endif %}
+{% endblock %}

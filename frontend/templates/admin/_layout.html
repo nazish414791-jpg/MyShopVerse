@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}max-w-[1500px] mx-auto px-6 py-8{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ---- Admin sidebar nav (premium) ---- */
+    .admin-nav-link {
+        position: relative;
+        display: flex; align-items: center; gap: 12px;
+        padding: 9px 12px 9px 14px; border-radius: 12px;
+        font-size: 14px; color: rgba(248,245,240,0.62);
+        transition: background-color 250ms ease, color 250ms ease, padding-left 250ms ease;
+    }
+    .admin-nav-link:hover { background: rgba(248,245,240,0.06); color: #F8F5F0; padding-left: 17px; }
+    .admin-nav-icon {
+        width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+        background: rgba(248,245,240,0.06);
+        display: flex; align-items: center; justify-content: center;
+        transition: background-color 250ms ease, color 250ms ease, transform 250ms ease;
+    }
+    .admin-nav-link:hover .admin-nav-icon { background: rgba(248,245,240,0.13); transform: scale(1.06); }
+    .admin-nav-link.is-active {
+        background: rgba(201,169,110,0.13); color: #F8F5F0; font-weight: 500;
+    }
+    .admin-nav-link.is-active::before {
+        content: ''; position: absolute; left: -1px; top: 50%; transform: translateY(-50%);
+        width: 3px; height: 58%; border-radius: 4px; background: #C9A96E;
+    }
+    .admin-nav-link.is-active .admin-nav-icon {
+        background: #C9A96E; color: #0F172A;
+        box-shadow: 0 6px 16px -4px rgba(201,169,110,0.55);
+    }
+    .admin-nav-link.is-danger { color: rgba(220,120,120,0.75); }
+    .admin-nav-link.is-danger:hover { background: rgba(220,120,120,0.1); color: #E08A8A; }
+    .admin-nav-link.is-danger:hover .admin-nav-icon { background: rgba(220,120,120,0.16); color: #E08A8A; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
+
+    <!-- ===================== ADMIN SIDEBAR ===================== -->
+    <aside class="bg-primary text-cream rounded-xl2 shadow-elevated p-5 h-fit lg:sticky lg:top-24 relative overflow-hidden">
+        <div class="bg-blur-circle" style="width: 220px; height: 220px; top: -14%; right: -20%; background: radial-gradient(circle, rgba(199,160,89,0.18) 0%, transparent 72%);" aria-hidden="true"></div>
+
+        <!-- Admin identity card -->
+        <div class="relative z-10 flex items-center gap-3 px-2 pb-5 mb-5 border-b border-cream/10">
+            <div class="relative flex-shrink-0">
+                <div class="w-12 h-12 rounded-full bg-peach text-primary-dark font-serif font-semibold flex items-center justify-center text-sm ring-2 ring-peach/25 ring-offset-2 ring-offset-primary">
+                    {{ (current_user.full_name or "A")[:1] }}{{ current_user.full_name.split(' ')[1][:1] if current_user.full_name and ' ' in current_user.full_name else '' }}
+                </div>
+                <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-status-success border-2 border-primary"></span>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-semibold text-cream truncate">{{ current_user.full_name }}</p>
+                <p class="text-[11px] text-peach/70 tracking-wide uppercase truncate mt-0.5">Administrator</p>
+            </div>
+        </div>
+
+        <p class="relative z-10 text-[10px] font-semibold text-peach/80 uppercase tracking-[0.2em] px-2 mb-3">Main Menu</p>
+        <nav class="relative z-10 space-y-1">
+            <a href="{{ url_for('admin.dashboard') }}"
+               class="admin-nav-link {% if request.endpoint == 'admin.dashboard' %}is-active{% endif %}">
+                <span class="admin-nav-icon"><i data-lucide="layout-dashboard" class="w-4 h-4"></i></span> Dashboard
+            </a>
+            <a href="{{ url_for('admin.manage_products') }}"
+               class="admin-nav-link {% if 'product' in request.endpoint %}is-active{% endif %}">
+                <span class="admin-nav-icon"><i data-lucide="package" class="w-4 h-4"></i></span> Products
+            </a>
+            <a href="{{ url_for('admin.manage_categories') }}"
+               class="admin-nav-link {% if 'categor' in request.endpoint %}is-active{% endif %}">
+                <span class="admin-nav-icon"><i data-lucide="tag" class="w-4 h-4"></i></span> Categories
+            </a>
+            <a href="{{ url_for('admin.manage_orders') }}"
+               class="admin-nav-link {% if 'order' in request.endpoint %}is-active{% endif %}">
+                <span class="admin-nav-icon"><i data-lucide="shopping-bag" class="w-4 h-4"></i></span> Orders
+            </a>
+            <a href="{{ url_for('admin.manage_customers') }}"
+               class="admin-nav-link {% if 'customer' in request.endpoint %}is-active{% endif %}">
+                <span class="admin-nav-icon"><i data-lucide="users" class="w-4 h-4"></i></span> Customers
+            </a>
+            <a href="{{ url_for('admin.analytics') }}"
+               class="admin-nav-link {% if request.endpoint == 'admin.analytics' %}is-active{% endif %}">
+                <span class="admin-nav-icon"><i data-lucide="bar-chart-3" class="w-4 h-4"></i></span> Analytics
+            </a>
+        </nav>
+
+        <div class="relative z-10 border-t border-cream/10 mt-5 pt-4 space-y-1">
+            <a href="{{ url_for('products.listing') }}" class="admin-nav-link">
+                <span class="admin-nav-icon"><i data-lucide="arrow-left" class="w-4 h-4"></i></span> Back to Store
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="admin-nav-link is-danger">
+                <span class="admin-nav-icon"><i data-lucide="log-out" class="w-4 h-4"></i></span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===================== ADMIN CONTENT ===================== -->
+    <div class="min-w-0">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

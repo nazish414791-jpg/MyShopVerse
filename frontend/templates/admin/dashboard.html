@@ -1,0 +1,279 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block admin_content %}
+
+<!-- ===================== WELCOME BANNER ===================== -->
+<div class="relative overflow-hidden bg-primary rounded-xl2 shadow-elevated p-6 md:p-7 mb-6">
+    <div class="bg-blur-circle" style="width: 260px; height: 260px; top: -30%; right: -6%; background: radial-gradient(circle, rgba(199,160,89,0.2) 0%, transparent 72%);" aria-hidden="true"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <p class="text-peach text-[11px] font-medium tracking-[0.25em] uppercase mb-1.5">{{ store_name }} Admin</p>
+            <h1 class="font-serif text-2xl md:text-[28px] font-semibold text-cream">Welcome back, {{ current_user.full_name.split(' ')[0] }}</h1>
+            <p class="text-cream/50 text-xs mt-1">Here's what's happening with your store today.</p>
+        </div>
+        <div class="flex gap-2.5 flex-shrink-0">
+            <a href="{{ url_for('admin.new_product') }}"
+               class="btn-lift px-5 py-2.5 rounded-full bg-peach hover:bg-cream text-primary-dark text-xs font-medium tracking-wide uppercase transition-colors shadow-glow flex items-center gap-2">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> New Product
+            </a>
+            <a href="{{ url_for('admin.manage_orders') }}"
+               class="btn-lift px-5 py-2.5 rounded-full bg-cream/10 hover:bg-cream/20 text-cream text-xs font-medium tracking-wide uppercase transition-colors flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i> View Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== STAT CARDS ===================== -->
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-5 hover-lift">
+        <div class="w-10 h-10 rounded-full bg-chart-sales/15 text-chart-sales flex items-center justify-center mb-3">
+            <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+        </div>
+        <p class="text-xs text-ink-muted mb-1">Total Sales</p>
+        <p class="text-xl font-serif font-semibold text-ink">{{ currency }}{{ "%.2f"|format(total_sales) }}</p>
+    </div>
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-5 hover-lift">
+        <div class="w-10 h-10 rounded-full bg-status-success/15 text-status-success flex items-center justify-center mb-3">
+            <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+        </div>
+        <p class="text-xs text-ink-muted mb-1">Total Orders</p>
+        <p class="text-xl font-serif font-semibold text-ink">{{ total_orders }}</p>
+    </div>
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-5 hover-lift">
+        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
+            <i data-lucide="users" class="w-4.5 h-4.5"></i>
+        </div>
+        <p class="text-xs text-ink-muted mb-1">Customers</p>
+        <p class="text-xl font-serif font-semibold text-ink">{{ total_customers }}</p>
+    </div>
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-5 hover-lift">
+        <div class="w-10 h-10 rounded-full bg-peach/20 text-peach-dark flex items-center justify-center mb-3">
+            <i data-lucide="package" class="w-4.5 h-4.5"></i>
+        </div>
+        <p class="text-xs text-ink-muted mb-1">Total Products</p>
+        <p class="text-xl font-serif font-semibold text-ink">{{ total_products }}</p>
+    </div>
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-5 hover-lift">
+        <div class="w-10 h-10 rounded-full bg-status-cancelled/15 text-status-cancelled flex items-center justify-center mb-3">
+            <i data-lucide="alert-triangle" class="w-4.5 h-4.5"></i>
+        </div>
+        <p class="text-xs text-ink-muted mb-1">Out of Stock</p>
+        <p class="text-xl font-serif font-semibold text-ink">{{ out_of_stock_count }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+    <!-- ===================== LOW STOCK ALERTS ===================== -->
+    <div class="lg:col-span-2 bg-card border border-border rounded-xl2 shadow-matte p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-serif text-base font-semibold text-ink">Low Stock Alerts</h3>
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-peach-dark"></i>
+        </div>
+        {% if low_stock_products %}
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-ink-muted border-b border-border">
+                    <th class="pb-2 font-medium">Product Name</th>
+                    <th class="pb-2 font-medium">Status</th>
+                    <th class="pb-2 font-medium text-right">Stock</th>
+                    <th class="pb-2 font-medium text-right">Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in low_stock_products %}
+                <tr class="border-b border-border/60 last:border-0">
+                    <td class="py-3">
+                        <a href="{{ url_for('admin.edit_product', product_id=product.id) }}" class="text-ink hover:text-primary-dark transition-colors">
+                            {{ product.name }}
+                        </a>
+                    </td>
+                    <td class="py-3">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium
+                            {% if product.stock_quantity == 0 %} bg-status-cancelled/25 text-status-cancelled
+                            {% else %} bg-status-pending/25 text-status-cancelled {% endif %}">
+                            {{ product.stock_status_label }}
+                        </span>
+                    </td>
+                    <td class="py-3 text-right">{{ product.stock_quantity }}</td>
+                    <td class="py-3 text-right">{{ currency }}{{ "%.2f"|format(product.price) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-sm text-ink-muted py-8 text-center">All products are well-stocked. 🎉</p>
+        {% endif %}
+    </div>
+
+    <!-- ===================== SALES CHART ===================== -->
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+        <h3 class="font-serif text-base font-semibold text-ink mb-4">Sales &amp; Orders <span class="text-xs text-ink-muted font-sans font-normal">(6 mo)</span></h3>
+        <canvas id="salesChart" height="220"></canvas>
+    </div>
+</div>
+
+<!-- ===================== ANALYTICS ROW: STATUS / CATEGORY / TOP PRODUCTS ===================== -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+    <!-- Order status donut -->
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+        <h3 class="font-serif text-base font-semibold text-ink mb-4">Orders by Status</h3>
+        <canvas id="statusChart" height="220"></canvas>
+    </div>
+
+    <!-- Revenue by category donut -->
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+        <h3 class="font-serif text-base font-semibold text-ink mb-4">Revenue by Category</h3>
+        {% if category_labels %}
+        <canvas id="categoryChart" height="220"></canvas>
+        {% else %}
+        <p class="text-sm text-ink-muted py-16 text-center">No sales data yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Top selling products (leaderboard bars) -->
+    <div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+        <h3 class="font-serif text-base font-semibold text-ink mb-5">Top Selling Products</h3>
+        {% if top_products %}
+        <div class="space-y-4">
+            {% for p in top_products %}
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <p class="text-xs text-ink line-clamp-1 pr-2">{{ p.name }}</p>
+                    <p class="text-xs font-semibold text-peach-dark flex-shrink-0">{{ p.units }} sold</p>
+                </div>
+                <div class="rating-bar-track">
+                    <div class="rating-bar-fill" style="width: {{ (p.units / max_units * 100)|round(1) }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-ink-muted py-16 text-center">No sales data yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===================== RECENT ORDERS ===================== -->
+<div class="bg-card border border-border rounded-xl2 shadow-matte p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="font-serif text-base font-semibold text-ink">Recent Orders</h3>
+        <a href="{{ url_for('admin.manage_orders') }}" class="text-xs font-medium text-primary-dark hover:underline">View All</a>
+    </div>
+    {% if recent_orders %}
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-ink-muted border-b border-border">
+                <th class="pb-2 font-medium">Order</th>
+                <th class="pb-2 font-medium">Customer</th>
+                <th class="pb-2 font-medium">Status</th>
+                <th class="pb-2 font-medium text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in recent_orders %}
+            <tr class="border-b border-border/60 last:border-0 hover:bg-subtle/30 cursor-pointer"
+                onclick="window.location='{{ url_for('admin.admin_order_detail', order_number=order.order_number) }}'">
+                <td class="py-3 font-medium text-ink">{{ order.order_number }}</td>
+                <td class="py-3 text-ink-muted">{{ order.shipping_full_name }}</td>
+                <td class="py-3">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium
+                        {% if order.status == 'Delivered' %} bg-status-success/25 text-primary-dark
+                        {% elif order.status == 'Shipped' %} bg-peach/40 text-peach-dark
+                        {% elif order.status == 'Cancelled' %} bg-status-cancelled/25 text-status-cancelled
+                        {% else %} bg-status-pending/25 text-status-cancelled {% endif %}">
+                        {{ order.status }}
+                    </span>
+                </td>
+                <td class="py-3 text-right font-medium">{{ currency }}{{ "%.2f"|format(order.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-sm text-ink-muted py-8 text-center">No orders yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+    // ---- Sales & Orders (line) ----
+    new Chart(document.getElementById('salesChart'), {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|tojson }},
+            datasets: [
+                {
+                    label: 'Sales',
+                    data: {{ chart_sales|tojson }},
+                    borderColor: '#8B9B7E',
+                    backgroundColor: 'rgba(139, 155, 126, 0.2)',
+                    tension: 0.35,
+                    fill: true,
+                },
+                {
+                    label: 'Orders',
+                    data: {{ chart_orders|tojson }},
+                    borderColor: '#C7A059',
+                    backgroundColor: 'rgba(199, 160, 89, 0.2)',
+                    tension: 0.35,
+                    fill: true,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: '#EDE4D2' } }
+            }
+        }
+    });
+
+    // ---- Orders by Status (donut) ----
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|tojson }},
+            datasets: [{
+                data: {{ status_values|tojson }},
+                backgroundColor: ['#C7A059', '#8B9B7E', '#4F5B3E', '#A8452F'],
+                borderColor: '#FFFFFF',
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '68%',
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 14 } } }
+        }
+    });
+
+    {% if category_labels %}
+    // ---- Revenue by Category (donut) ----
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ category_labels|tojson }},
+            datasets: [{
+                data: {{ category_values|tojson }},
+                backgroundColor: ['#55624A', '#C7A059', '#8B9B7E', '#B08D5B', '#4F5B3E', '#6E7856'],
+                borderColor: '#FFFFFF',
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '68%',
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 14 } } }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

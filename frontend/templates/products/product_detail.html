@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block nav_theme_class %}light{% endblock %}
+{% block body_bg %}bg-[#F9F4EA] text-[#33322C]{% endblock %}
+{% block main_class %}w-full{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ---- Product detail page background richness ---- */
+    .pdp-shell { position: relative; background: #F7F1E7; overflow: hidden; }
+    .pdp-glow-a {
+        position: absolute; top: -8%; left: -6%; width: 420px; height: 420px;
+        background: radial-gradient(circle, rgba(199,160,89,0.14) 0%, transparent 70%);
+        pointer-events: none; z-index: 0;
+    }
+    .pdp-glow-b {
+        position: absolute; bottom: -10%; right: -8%; width: 480px; height: 480px;
+        background: radial-gradient(circle, rgba(199,160,89,0.10) 0%, transparent 70%);
+        pointer-events: none; z-index: 0;
+    }
+    /* ---- Lightbox ---- */
+    #lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(44,43,38,0.92); display: none; align-items: center; justify-content: center; padding: 40px; }
+    #lightbox.is-open { display: flex; }
+    #lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 12px; object-fit: contain; }
+    #lightbox-close { position: absolute; top: 24px; right: 28px; color: #F7F1E7; cursor: pointer; }
+    /* ---- Write-a-review modal ---- */
+    #review-modal { position: fixed; inset: 0; z-index: 100; background: rgba(44,43,38,0.6); display: none; align-items: center; justify-content: center; padding: 20px; }
+    #review-modal.is-open { display: flex; }
+    .qty-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: background-color 200ms ease; }
+    .qty-btn:hover { background-color: rgba(44,43,38,0.06); }
+    /* ---- Full-bleed band helper (breaks out of any parent width) ---- */
+    .band-full { width: 100%; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ===================== HERO / GALLERY BAND — full viewport width ===================== -->
+<div class="band-full -mt-[88px] pt-[110px] pdp-shell relative">
+    <div class="pdp-glow-a" aria-hidden="true"></div>
+    <div class="pdp-glow-b" aria-hidden="true"></div>
+    <div class="bg-grain-texture" aria-hidden="true" style="opacity: 0.035;"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 pb-16">
+
+        <!-- ===================== BREADCRUMB ===================== -->
+        <nav class="text-xs mb-8 reveal">
+            <a href="{{ url_for('products.listing') }}" class="uppercase tracking-widest text-ink-muted hover:text-peach-dark transition-colors relative">Shop</a>
+            <span class="mx-2 text-ink-muted/50">/</span>
+            <a href="{{ url_for('products.listing', category=product.category.slug) }}" class="uppercase tracking-widest text-ink-muted hover:text-peach-dark transition-colors">{{ product.category.name }}</a>
+            <span class="mx-2 text-ink-muted/50">/</span>
+            <span class="uppercase tracking-widest text-ink">{{ product.name }}</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+            <!-- ===================== GALLERY ===================== -->
+            <div class="reveal">
+                {% set images = product.gallery_images %}
+                <div class="img-zoom-hover relative aspect-square bg-card border border-border rounded-xl2 shadow-elevated overflow-hidden cursor-zoom-in mb-4" id="gallery-main-wrap">
+                    {% if images %}
+                    <img src="{{ images[0] }}" alt="{{ product.name }}" id="gallery-main-img" class="skeleton-img img-zoom gallery-main-fade w-full h-full object-cover" loading="lazy" decoding="async">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-ink-muted text-sm">No Image Available</div>
+                    {% endif %}
+                    {% if product.discount_percentage %}
+                    <span class="absolute top-4 left-4 bg-peach text-primary-dark text-xs font-semibold px-3 py-1.5 rounded-full shadow-matte">-{{ product.discount_percentage }}%</span>
+                    {% endif %}
+                    <span class="absolute bottom-4 right-4 w-9 h-9 rounded-full bg-card/90 shadow-matte flex items-center justify-center text-ink-muted">
+                        <i data-lucide="expand" class="w-4 h-4"></i>
+                    </span>
+                </div>
+                {% if images|length > 1 %}
+                <div class="grid grid-cols-4 gap-3" id="gallery-thumbs">
+                    {% for img in images %}
+                    <button type="button" class="gallery-thumb aspect-square {% if loop.first %}is-active{% endif %}" data-src="{{ img }}">
+                        <img src="{{ img }}" alt="{{ product.name }} — view {{ loop.index }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ===================== PRODUCT INFO ===================== -->
+            <div class="reveal" style="transition-delay: 100ms;">
+                <p class="text-xs font-semibold text-peach-dark uppercase tracking-[0.25em] mb-3">{{ product.category.name }}{% if product.subcategory %} · {{ product.subcategory }}{% endif %}</p>
+                <h1 class="font-serif text-3xl md:text-[38px] font-semibold text-[#2C2B26] mb-4 leading-tight">{{ product.name }}</h1>
+
+                {% set rating = 4 + (product.id % 2) %}
+                {% set review_count = 12 + (product.id * 7) % 80 %}
+                <div class="flex items-center gap-2 mb-5">
+                    <div class="flex items-center gap-0.5 text-peach">
+                        {% for i in range(5) %}
+                        <i data-lucide="star" class="w-4 h-4 {% if i < rating %}fill-current{% else %}text-border{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    <a href="#reviews" class="text-xs text-ink-muted hover:text-peach-dark transition-colors">{{ rating }}.0 · {{ review_count }} reviews</a>
+                </div>
+
+                <div class="flex items-center gap-3 mb-5">
+                    <span class="text-3xl font-semibold text-ink">{{ currency }}{{ "%.2f"|format(product.price) }}</span>
+                    {% if product.compare_at_price %}
+                    <span class="text-lg text-ink-muted line-through">{{ currency }}{{ "%.2f"|format(product.compare_at_price) }}</span>
+                    <span class="text-xs font-semibold text-primary-dark bg-peach px-2.5 py-1 rounded-full">Save {{ product.discount_percentage }}%</span>
+                    {% endif %}
+                </div>
+
+                <div class="mb-6">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full
+                        {% if product.stock_status_label == 'In Stock' %} bg-status-success/15 text-status-success
+                        {% elif product.stock_status_label == 'Low Stock' %} bg-peach/25 text-peach-dark
+                        {% else %} bg-status-cancelled/15 text-status-cancelled
+                        {% endif %}">
+                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                        {{ product.stock_status_label }}
+                        {% if product.is_low_stock %} — only {{ product.stock_quantity }} left{% endif %}
+                    </span>
+                </div>
+
+                {% if product.description %}
+                <p class="text-[15px] text-ink-muted leading-relaxed mb-7">{{ product.description }}</p>
+                {% endif %}
+
+                {% if product.in_stock %}
+                <form method="POST" action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" class="flex items-center gap-3 mb-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="flex items-center border border-border rounded-full bg-card shadow-matte overflow-hidden flex-shrink-0">
+                        <button type="button" class="qty-btn text-ink" onclick="var i=document.getElementById('qty-input'); i.value = Math.max(1, parseInt(i.value||1)-1);">−</button>
+                        <input id="qty-input" type="number" name="quantity" value="1" min="1" max="{{ product.stock_quantity }}"
+                               class="w-12 text-center text-sm border-0 focus:outline-none focus:ring-0 bg-transparent">
+                        <button type="button" class="qty-btn text-ink" onclick="var i=document.getElementById('qty-input'); i.value = Math.min({{ product.stock_quantity }}, parseInt(i.value||1)+1);">+</button>
+                    </div>
+                    <button type="submit"
+                            class="btn-lift flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-primary hover:bg-peach text-white hover:text-primary-dark text-xs font-medium tracking-widest uppercase transition-colors duration-300">
+                        <i data-lucide="shopping-bag" class="w-4 h-4"></i> Add to Cart
+                    </button>
+                </form>
+                {% else %}
+                <button disabled class="w-full py-3.5 rounded-full bg-border text-ink-muted text-xs font-medium tracking-widest uppercase mb-3 cursor-not-allowed">
+                    Out of Stock
+                </button>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('cart.toggle_wishlist', product_id=product.id) }}" class="mb-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit"
+                            class="btn-lift w-full py-3 rounded-full border border-peach/60 hover:bg-peach/10 text-peach-dark text-xs font-medium tracking-widest uppercase transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="heart" class="w-4 h-4"></i> Add to Wishlist
+                    </button>
+                </form>
+
+                {% if product.sku %}
+                <p class="text-xs text-ink-muted mt-5">SKU: {{ product.sku }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== TRUST / GUARANTEE BAND — full width, navy + gold ===================== -->
+<div class="band-full bg-primary relative overflow-hidden">
+    <svg class="bg-wave-pattern" style="top: -2px; opacity: 0.5;" viewBox="0 0 1400 40" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,20 C 233,2 466,38 700,20 C 933,2 1166,38 1400,20" fill="none" stroke="#C7A059" stroke-opacity="0.35" stroke-width="1.5"></path>
+    </svg>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="trust-item text-center">
+            <div class="trust-icon"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+            <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Secure Checkout</p>
+        </div>
+        <div class="trust-item text-center">
+            <div class="trust-icon"><i data-lucide="truck" class="w-5 h-5"></i></div>
+            <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Free Worldwide Delivery</p>
+        </div>
+        <div class="trust-item text-center">
+            <div class="trust-icon"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></div>
+            <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Easy 30-Day Returns</p>
+        </div>
+        <div class="trust-item text-center">
+            <div class="trust-icon"><i data-lucide="gem" class="w-5 h-5"></i></div>
+            <p class="trust-heading text-[11px] font-semibold tracking-wide uppercase text-cream leading-tight">Authenticity Guaranteed</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== SPECS ACCORDION BAND — full width, warm beige ===================== -->
+<div class="band-full bg-[#EDE2C9]">
+    <div class="max-w-3xl mx-auto px-6 py-16 reveal">
+        <p class="text-peach-dark text-xs font-medium tracking-[0.3em] uppercase mb-3 text-center">The Fine Print</p>
+        <h2 class="font-serif text-2xl md:text-3xl font-semibold text-[#2C2B26] mb-8 text-center">Details &amp; Care</h2>
+        <div class="space-y-4">
+            <div class="faq-accordion-item">
+                <button type="button" class="faq-toggle" aria-expanded="true">
+                    <span>Materials</span>
+                    <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                </button>
+                <div class="faq-panel is-open">
+                    <div class="faq-panel-inner">
+                        Crafted from the finest materials sourced for their durability and character —
+                        {% if product.category.name == 'Jewellery' %}precious metals and ethically sourced stones, hand-finished by our in-house goldsmiths.
+                        {% elif product.category.name == 'Bags' or product.subcategory in ['Outerwear', 'Footwear'] %}full-grain leather that develops a rich patina with wear, paired with solid brass hardware.
+                        {% elif product.category.name == 'Electronics' %}precision components housed in a brushed metal casing, built for everyday reliability.
+                        {% else %}considered natural materials, chosen for texture and longevity over trend.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="faq-accordion-item">
+                <button type="button" class="faq-toggle" aria-expanded="false">
+                    <span>Dimensions</span>
+                    <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                </button>
+                <div class="faq-panel">
+                    <div class="faq-panel-inner">
+                        Exact dimensions vary slightly by nature of the handcrafted process. A full size guide
+                        and measurements are available on request via Contact Support — we're glad to confirm
+                        fit before you order.
+                    </div>
+                </div>
+            </div>
+            <div class="faq-accordion-item">
+                <button type="button" class="faq-toggle" aria-expanded="false">
+                    <span>Care Instructions</span>
+                    <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                </button>
+                <div class="faq-panel">
+                    <div class="faq-panel-inner">
+                        Store away from direct sunlight and moisture. Wipe clean with a soft, dry cloth and
+                        avoid harsh chemicals. With considered care, this piece is built to age gracefully
+                        and last for years to come.
+                    </div>
+                </div>
+            </div>
+            <div class="faq-accordion-item">
+                <button type="button" class="faq-toggle" aria-expanded="false">
+                    <span>Shipping &amp; Returns</span>
+                    <i data-lucide="chevron-down" class="faq-chevron w-5 h-5 flex-shrink-0"></i>
+                </button>
+                <div class="faq-panel">
+                    <div class="faq-panel-inner">
+                        Free worldwide delivery on every order, typically arriving within 3–12 business days.
+                        Not quite right? Return it unworn within 30 days for a full refund.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== REVIEWS BAND — full width, cream ===================== -->
+{% set pct5 = 40 + (product.id * 3) % 35 %}
+{% set pct4 = 20 + (product.id * 5) % 20 %}
+{% set pct3 = 10 + (product.id * 2) % 12 %}
+{% set pct2 = 3 + (product.id) % 6 %}
+{% set pct1 = 100 - pct5 - pct4 - pct3 - pct2 %}
+<div class="band-full bg-[#F9F4EA]">
+    <div id="reviews" class="max-w-5xl mx-auto px-6 py-16 scroll-mt-24 reveal">
+        <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div>
+                <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-2">What They're Saying</p>
+                <h2 class="font-serif text-2xl font-semibold text-[#2C2B26]">Reviews &amp; Ratings</h2>
+            </div>
+            <button type="button" id="write-review-btn"
+                    class="btn-lift inline-flex items-center gap-2 bg-primary hover:bg-peach text-white hover:text-primary-dark text-xs font-medium tracking-wide uppercase px-6 py-3 rounded-full">
+                <i data-lucide="pencil-line" class="w-3.5 h-3.5"></i> Write a Review
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+            <div class="text-center md:text-left">
+                <p class="font-serif text-5xl font-semibold text-ink mb-2">{{ rating }}.0</p>
+                <div class="flex items-center justify-center md:justify-start gap-0.5 text-peach mb-2">
+                    {% for i in range(5) %}
+                    <i data-lucide="star" class="w-4 h-4 {% if i < rating %}fill-current{% else %}text-border{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <p class="text-xs text-ink-muted">Based on {{ review_count }} reviews</p>
+            </div>
+            <div class="md:col-span-2 space-y-2">
+                {% for stars, pct in [(5, pct5), (4, pct4), (3, pct3), (2, pct2), (1, pct1)] %}
+                <div class="flex items-center gap-3 text-xs text-ink-muted">
+                    <span class="w-10 flex-shrink-0">{{ stars }} star</span>
+                    <div class="rating-bar-track flex-1"><div class="rating-bar-fill" style="width: {{ pct }}%;"></div></div>
+                    <span class="w-8 flex-shrink-0 text-right">{{ pct }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {#- Deterministic sample reviews, seeded from the product id so each product shows different reviewers. -#}
+        {% set reviewers = [
+            {"name": "Alina R.", "location": "New York, USA", "comment": "The craftsmanship is even better in person than the photos suggested. Fast shipping, beautifully packaged."},
+            {"name": "Maya K.", "location": "London, UK", "comment": "Exactly as described, and the quality feels genuinely premium. Would order from this collection again."},
+            {"name": "David H.", "location": "Toronto, Canada", "comment": "Took a little longer to arrive than expected, but the piece itself is stunning and clearly well made."},
+            {"name": "Sofia M.", "location": "Lisbon, Portugal", "comment": "Bought this as a gift and the recipient was thrilled. The packaging alone felt like a luxury unboxing."},
+            {"name": "James T.", "location": "Sydney, Australia", "comment": "Solid construction, thoughtful details, and true to the size guide. My second purchase from ShopVerse."}
+        ] %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {% for i in range(4) %}
+            {% set r = reviewers[(product.id + i) % reviewers|length] %}
+            <div class="bg-card border border-border rounded-xl2 shadow-matte p-6 reveal" style="transition-delay: {{ i * 80 }}ms;">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="text-sm font-semibold text-ink">{{ r.name }}</p>
+                        <p class="text-[11px] text-ink-muted">{{ r.location }}</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1 text-[10px] font-medium tracking-wide uppercase text-peach-dark bg-peach/12 border border-peach/30 rounded-full px-2 py-1">
+                        <i data-lucide="badge-check" class="w-3 h-3"></i> Verified Purchase
+                    </span>
+                </div>
+                <div class="flex items-center gap-0.5 text-peach mb-3">
+                    {% for s in range(5) %}
+                    <i data-lucide="star" class="w-3.5 h-3.5 {% if s < (3 + (product.id + i) % 3) %}fill-current{% else %}text-border{% endif %}"></i>
+                    {% endfor %}
+                    <span class="text-[11px] text-ink-muted ml-2">{{ ["2 weeks ago", "1 month ago", "6 weeks ago", "2 months ago"][i] }}</span>
+                </div>
+                <p class="text-sm text-ink-muted leading-relaxed">{{ r.comment }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ===================== RELATED PRODUCTS BAND — full width, warm beige ===================== -->
+{% if related_products %}
+<div class="band-full bg-[#EDE2C9]">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+        <p class="text-peach-dark text-xs font-medium tracking-[0.25em] uppercase mb-2 text-center">Complete The Look</p>
+        <h2 class="font-serif text-2xl font-semibold text-[#2C2B26] mb-8 text-center reveal">You Might Also Like</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
+            {% for rp in related_products %}
+            <div class="reveal" style="transition-delay: {{ (loop.index0 % 4) * 80 }}ms;">
+                {{ product_card(rp, compact=true) }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ===================== LIGHTBOX ===================== -->
+<div id="lightbox">
+    <i data-lucide="x" id="lightbox-close" class="w-7 h-7"></i>
+    <img id="lightbox-img" src="" alt="{{ product.name }}" loading="lazy" decoding="async">
+</div>
+
+<!-- ===================== WRITE A REVIEW MODAL ===================== -->
+<div id="review-modal">
+    <div class="bg-card rounded-xl2 shadow-elevated max-w-md w-full p-8 relative">
+        <button type="button" id="review-modal-close" class="absolute top-5 right-5 text-ink-muted hover:text-ink">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <h3 class="font-serif text-xl font-semibold text-ink mb-1">Write a Review</h3>
+        <p class="text-sm text-ink-muted mb-6">Share your thoughts on {{ product.name }}.</p>
+        <div class="flex items-center gap-1 text-peach mb-5">
+            {% for i in range(5) %}<i data-lucide="star" class="w-6 h-6 text-border"></i>{% endfor %}
+        </div>
+        <textarea rows="4" placeholder="What did you think of this piece?"
+                  class="w-full px-4 py-3 rounded-lg border border-border bg-subtle text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-peach/40"></textarea>
+        <button type="button" class="btn-lift w-full py-3 rounded-full bg-primary hover:bg-peach text-white hover:text-primary-dark text-xs font-medium tracking-widest uppercase">
+            Submit Review
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // ---- Gallery: thumbnail swap with cross-fade ----
+    (function () {
+        const mainImg = document.getElementById('gallery-main-img');
+        const thumbs = document.querySelectorAll('.gallery-thumb');
+        if (!mainImg || !thumbs.length) return;
+        thumbs.forEach((thumb) => {
+            thumb.addEventListener('click', () => {
+                const newSrc = thumb.dataset.src;
+                if (newSrc === mainImg.src) return;
+                mainImg.classList.add('is-fading');
+                setTimeout(() => {
+                    mainImg.src = newSrc;
+                    mainImg.classList.remove('is-fading');
+                }, 180);
+                thumbs.forEach((t) => t.classList.remove('is-active'));
+                thumb.classList.add('is-active');
+            });
+        });
+    })();
+
+    // ---- Lightbox ----
+    (function () {
+        const wrap = document.getElementById('gallery-main-wrap');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const closeBtn = document.getElementById('lightbox-close');
+        const mainImg = document.getElementById('gallery-main-img');
+        if (!wrap || !lightbox) return;
+        wrap.addEventListener('click', () => {
+            if (!mainImg || !mainImg.src) return;
+            lightboxImg.src = mainImg.src;
+            lightbox.classList.add('is-open');
+        });
+        const close = () => lightbox.classList.remove('is-open');
+        closeBtn && closeBtn.addEventListener('click', close);
+        lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
+    })();
+
+    // ---- Write a review modal ----
+    (function () {
+        const openBtn = document.getElementById('write-review-btn');
+        const modal = document.getElementById('review-modal');
+        const closeBtn = document.getElementById('review-modal-close');
+        if (!openBtn || !modal) return;
+        openBtn.addEventListener('click', () => modal.classList.add('is-open'));
+        const close = () => modal.classList.remove('is-open');
+        closeBtn && closeBtn.addEventListener('click', close);
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+    })();
+
+    // ---- Specs accordion (accordion-style: one open at a time) ----
+    (function () {
+        const items = document.querySelectorAll('.faq-accordion-item');
+        if (!items.length) return;
+        items.forEach((item) => {
+            const btn = item.querySelector('.faq-toggle');
+            const panel = item.querySelector('.faq-panel');
+            btn.addEventListener('click', () => {
+                const isOpen = panel.classList.contains('is-open');
+                items.forEach((other) => {
+                    other.querySelector('.faq-toggle').setAttribute('aria-expanded', 'false');
+                    other.querySelector('.faq-panel').classList.remove('is-open');
+                });
+                if (!isOpen) {
+                    btn.setAttribute('aria-expanded', 'true');
+                    panel.classList.add('is-open');
+                }
+            });
+        });
+    })();
+</script>
+{% endblock %}
