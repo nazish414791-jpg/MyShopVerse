@@ -36,7 +36,15 @@ def create_app(config_name=None):
         static_folder=os.path.join(frontend_dir, "static"),
     )
     app.config.from_object(config[config_name])
-  app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+    # Railway (and most PaaS providers) terminate HTTPS at a proxy and forward
+    # requests to the container as plain HTTP, adding an X-Forwarded-Proto
+    # header to say "this was originally https". Flask doesn't trust that
+    # header by default, so url_for(..., _external=True) would generate
+    # http:// links — which breaks OAuth redirect URIs that must match
+    # exactly what's registered with Google (https://...). ProxyFix tells
+    # Flask/Werkzeug to trust that header from the proxy.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # Ensure instance/ and uploads/ folders exist (SQLite file + user uploads)
     os.makedirs(app.instance_path, exist_ok=True)
