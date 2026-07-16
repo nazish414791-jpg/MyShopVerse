@@ -14,6 +14,7 @@ keeps the codebase testable and avoids circular imports.
 
 import os
 from flask import Flask, render_template
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf, oauth
@@ -35,6 +36,7 @@ def create_app(config_name=None):
         static_folder=os.path.join(frontend_dir, "static"),
     )
     app.config.from_object(config[config_name])
+  app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # Ensure instance/ and uploads/ folders exist (SQLite file + user uploads)
     os.makedirs(app.instance_path, exist_ok=True)
